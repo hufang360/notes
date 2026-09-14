@@ -20,6 +20,17 @@ useDefault = true
 # --------------------------------------------------------------------------- #
 
 [[allowlists]]
+description = "依赖和构建产物：已在 .gitignore 里，永远不会被提交"
+# 这几个路径与上面的铁律不矛盾 —— 它们不是笔记内容，本来就进不了仓库。
+# 必须排除的原因是 gitleaks dir 不看 .gitignore，会把 dist 里生成的搜索索引
+# 也扫一遍，而那些索引就是笔记正文的副本（示例密钥会被重复报一次）。
+paths = [
+  '''^node_modules/''',
+  '''^docs/\.vitepress/dist/''',
+  '''^docs/\.vitepress/cache/''',
+]
+
+[[allowlists]]
 description = "cv21314034 里作者明确标注为失效的 B 站直播配置示例"
 regexes = [
   '''TaPGcesj0aPoJpektLsyVzcuNAKKOU''',
