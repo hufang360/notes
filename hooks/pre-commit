@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+#
+# pre-commit 钩子
+#
+# 由 scripts/install-hooks.mjs 安装到 .git/hooks/pre-commit
+# （pnpm install 时会自动触发 prepare 脚本）
+#
+# 做两件事：
+#   1. 拦住误入暂存区的 private/ 文件
+#   2. 用 gitleaks 扫描密钥
+#
+# 确认是误报、必须跳过时：git commit --no-verify
+
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+
+# ---- 1. private/ 不允许提交（.gitkeep 例外，它只是用来占位）----
+leaked=$(echo "$staged" | grep '^private/' | grep -v '^private/\.gitkeep$' || true)
+if [ -n "$leaked" ]; then
+  echo ""
+  echo "❌ 提交被阻止：private/ 目录下的文件不应该进仓库"
+  echo "$leaked" | sed 's/^/     /'
+  echo ""
+  echo "   private/ 是存放密码、密钥、服务器资料的地方。"
+  echo "   取消暂存：  git reset HEAD private/"
+  echo "   真的想提交（不推荐）：  git commit --no-verify"
+  echo ""
+  exit 1
+fi
+
+# ---- 2. 密钥扫描 ----
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks git --staged --redact --no-banner --exit-code 1; then
+    echo ""
+    echo "❌ gitleaks 在暂存区里发现了疑似密钥，提交被阻止。"
+    echo ""
+    echo "   如果确认是误报，在那一行末尾加注释：  # gitleaks:allow"
+    echo "   或者整体跳过（不推荐）：  git commit --no-verify"
+    echo ""
+    exit 1
+  fi
+else
+  echo "⚠️  未检测到 gitleaks，跳过密钥扫描。安装：brew install gitleaks"
+fi

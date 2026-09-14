@@ -1,0 +1,32 @@
+# gitleaks 配置
+# 在 hooks/pre-commit 和 pnpm check 中使用
+# 语法参考：https://github.com/gitleaks/gitleaks#configuration
+
+title = "notes 仓库密钥扫描规则"
+
+[extend]
+# 继承 gitleaks 内置的全部规则（800+ 条：AWS / GitHub / Slack / 私钥 / 各类 token）
+useDefault = true
+
+# 允许清单：示例代码、文档里的假密钥不该报错
+[[allowlists]]
+description = "文档与示例里的占位符"
+paths = [
+  '''docs/.*\.md$''',
+  '''_templates/.*\.md$''',
+  '''private/README\.md$''',
+  '''scripts/.*\.mjs$''',
+  '''hooks/pre-commit$''',
+]
+regexes = [
+  '''change-me''',
+  '''your[-_].*[-_]here''',
+  '''example\.com''',
+  '''example\.org''',
+  '''<.*>''',
+  '''xxx+''',
+  '''1234567890''',
+]
+
+# 每一条允许清单只作用于下面这些规则之外（留空表示全部规则）
+# 如果你发现某条内置规则在本仓库误报太多，可以在这里单独加 rules 字段

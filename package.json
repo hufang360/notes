@@ -1,0 +1,21 @@
+{
+  "name": "notes",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "软件 / 游戏 / 运维 笔记，Obsidian 写作，VitePress 发布",
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs",
+    "new": "node scripts/new-note.mjs",
+    "check": "node scripts/check-secrets.mjs",
+    "status": "node scripts/status.mjs",
+    "prepare": "node scripts/install-hooks.mjs"
+  },
+  "devDependencies": {
+    "markdown-it-mathjax3": "^5.2.0",
+    "mermaid": "^12.0.0",
+    "vitepress": "^1.6.4"
+  }
+}

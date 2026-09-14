@@ -1,0 +1,12 @@
+# pnpm 设置
+#
+# pnpm 10+ 要求显式声明哪些依赖允许执行安装脚本（供应链安全）。
+# esbuild 需要跑安装脚本才能装上平台二进制，VitePress 依赖它。
+#
+# allowBuilds       —— pnpm 11+ 的写法
+# onlyBuiltDependencies —— pnpm 10 的写法，留着是为了向后兼容
+allowBuilds:
+  esbuild: true
+
+onlyBuiltDependencies:
+  - esbuild

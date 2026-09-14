@@ -1,0 +1,79 @@
+/* ------------------------------------------------------------------ *
+ * 站点自定义样式
+ * ------------------------------------------------------------------ */
+
+/* 正文里的图片：圆角 + 限宽 + 点击可看大图（浏览器默认行为） */
+.vp-doc img {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
+  margin: 1rem auto;
+  display: block;
+  max-width: 100%;
+}
+
+/* 深色模式下阴影弱一点 */
+.dark .vp-doc img {
+  box-shadow: 0 2px 12px rgb(0 0 0 / 45%);
+}
+
+/* Obsidian 的 ==高亮== */
+.vp-doc mark {
+  background-color: var(--vp-c-brand-soft);
+  color: inherit;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+/* mermaid 容器样式在 theme/Mermaid.vue 里（scoped），这里只兜底 */
+.mermaid-error {
+  color: var(--vp-c-danger-1);
+  background: var(--vp-c-danger-soft);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+/* GitHub 风格提示框的标题默认是英文（NOTE / TIP / WARNING ...），
+   这里换成中文。文字在 DOM 里，所以用 font-size:0 藏掉再 ::after 重写 */
+.vp-doc .custom-block.github-alert .custom-block-title {
+  font-size: 0;
+}
+
+.vp-doc .custom-block.github-alert .custom-block-title::after {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.vp-doc .custom-block.github-alert.note .custom-block-title::after {
+  content: '说明';
+}
+
+.vp-doc .custom-block.github-alert.tip .custom-block-title::after {
+  content: '技巧';
+}
+
+.vp-doc .custom-block.github-alert.important .custom-block-title::after {
+  content: '重要';
+}
+
+.vp-doc .custom-block.github-alert.warning .custom-block-title::after {
+  content: '注意';
+}
+
+.vp-doc .custom-block.github-alert.caution .custom-block-title::after {
+  content: '警告';
+}
+
+/* 表格在窄屏可以横向滚动，而不是撑破布局 */
+.vp-doc table {
+  display: block;
+  overflow-x: auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* 笔记里常见的「元信息」行，例如：> 适用版本：xxx */
+.vp-doc .meta-line {
+  font-size: 0.875rem;
+  color: var(--vp-c-text-2);
+}

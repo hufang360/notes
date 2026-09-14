@@ -1,0 +1,52 @@
+# ---------- 依赖 / 构建产物 ----------
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+*.tsbuildinfo
+
+# ---------- 隐私内容：永不提交 ----------
+# 私密笔记、密钥、密码、token 全部放这里
+private/*
+!private/.gitkeep
+
+# ---------- 密钥 / 凭据 兜底 ----------
+# 即使用户手滑把密钥放到别处，这里也拦一道
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+known_hosts
+.env
+.env.*
+!.env.example
+*credential*.json
+*secret*.json
+*token*.txt
+serviceaccount*.json
+.npmrc
+.pypirc
+
+# ---------- 编辑器 / 系统 ----------
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ---------- Obsidian：本地状态（换机器后需要重建，不必共享）----------
+# 工作区布局包含你打开过哪些笔记、光标位置等信息
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.trash/
+
+# ---------- 临时文件 ----------
+*.tmp
+*.bak
+*~

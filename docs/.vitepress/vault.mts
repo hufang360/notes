@@ -1,0 +1,264 @@
+/**
+ * vault.mts —— 把 docs/ 当成一个 Obsidian vault 来读
+ *
+ * 负责：
+ *  1. 极简 frontmatter 解析（不引入 gray-matter 依赖）
+ *  2. 扫描所有笔记，区分「公开」和「草稿/私密」
+ *  3. 建立 [[双链]] 和 ![[图片]] 的解析索引
+ *  4. 按目录自动生成侧边栏
+ */
+import fs from 'node:fs'
+import path from 'node:path'
+
+export type Frontmatter = Record<string, unknown>
+
+/** 这些目录不会被当作笔记内容 */
+export const SKIP_DIRS = new Set([
+  '.vitepress',
+  'node_modules',
+  'public',
+  'private',
+  '_templates',
+  '.git',
+  '.obsidian',
+])
+
+/** 递归找出 dir 下所有 .md 文件，返回绝对路径 */
+export function walkMarkdown(dir: string): string[] {
+  const out: string[] = []
+  if (!fs.existsSync(dir)) return out
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith('.')) continue
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (SKIP_DIRS.has(entry.name)) continue
+      out.push(...walkMarkdown(full))
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      out.push(full)
+    }
+  }
+  return out
+}
+
+/** 解析开头的 --- ... --- 块。Obsidian 写出来的都是简单 kv，不用上 yaml 库 */
+export function parseFrontmatter(raw: string): { data: Frontmatter; body: string } {
+  const m = /^\uFEFF?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(raw)
+  if (!m) return { data: {}, body: raw }
+  const data: Frontmatter = {}
+  for (const line of m[1].split(/\r?\n/)) {
+    if (/^\s*#/.test(line) || !line.trim()) continue
+    const kv = /^([A-Za-z0-9_\-.]+)\s*:\s*(.*)$/.exec(line)
+    if (!kv) continue
+    const key = kv[1]
+    let value: unknown = kv[2].trim()
+    if (typeof value === 'string') {
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1)
+      } else if (value === 'true') value = true
+      else if (value === 'false') value = false
+      else if (/^-?\d+$/.test(value)) value = Number(value)
+      else if (value.startsWith('[') && value.endsWith(']')) {
+        value = value
+          .slice(1, -1)
+          .split(',')
+          .map((s) => s.trim().replace(/^["']|["']$/g, ''))
+          .filter(Boolean)
+      }
+    }
+    data[key] = value
+  }
+  return { data, body: raw.slice(m[0].length) }
+}
+
+export function readNote(file: string): { data: Frontmatter; body: string } {
+  return parseFrontmatter(fs.readFileSync(file, 'utf8'))
+}
+
+function isTrue(v: unknown): boolean {
+  return v === true || v === 'true' || v === 'yes'
+}
+
+/** 判断一篇笔记是否不该出现在公开站点里 */
+export function isPrivate(data: Frontmatter): boolean {
+  if (isTrue(data.private)) return true
+  if (isTrue(data.draft)) return true
+  if (data.publish === false || data.publish === 'false' || data.publish === 'no') return true
+  return false
+}
+
+function firstHeading(body: string): string | undefined {
+  const m = /^#{1,6}\s+(.+?)\s*#*\s*$/m.exec(body)
+  return m?.[1]?.trim()
+}
+
+export interface NoteMeta {
+  /** 绝对路径 */
+  file: string
+  /** 相对 docs/ 的路径，如 software/git-cheatsheet.md */
+  rel: string
+  title: string
+  order: number
+  data: Frontmatter
+  /** 该笔记是否不公开 */
+  private: boolean
+}
+
+export interface NoteRef {
+  /** 相对 docs/ 的路径 */
+  rel: string
+  /** frontmatter.title 或第一个标题 */
+  title: string
+}
+
+export interface Vault {
+  root: string
+  /** 全部笔记（含私密） */
+  all: NoteMeta[]
+  /** 只含公开笔记 */
+  published: NoteMeta[]
+  /** 被 frontmatter 挡下来的笔记 */
+  hidden: NoteMeta[]
+  /** 笔记索引：小写文件名 / 小写相对路径（去掉 .md） -> 笔记 */
+  noteIndex: Map<string, NoteRef>
+  /** 图片等资源索引：小写文件名 -> /xxx/yyy.png 站内 URL */
+  assetIndex: Map<string, string>
+  warnings: string[]
+}
+
+function walkAssets(dir: string, publicRoot: string, into: Map<string, string>, warnings: string[]) {
+  if (!fs.existsSync(dir)) return
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      walkAssets(full, publicRoot, into, warnings)
+    } else if (entry.isFile() && !entry.name.startsWith('.')) {
+      const key = entry.name.toLowerCase()
+      const url = '/' + path.relative(publicRoot, full).split(path.sep).join('/')
+      if (into.has(key) && into.get(key) !== url) {
+        warnings.push(
+          `[附件重名] ${entry.name} 存在多个副本，![[${entry.name}]] 会解析到 ${into.get(key)}（另一处：${url}）`
+        )
+        continue
+      }
+      into.set(key, url)
+    }
+  }
+}
+
+/** 扫描整个 vault */
+export function loadVault(root: string): Vault {
+  const warnings: string[] = []
+  const all: NoteMeta[] = []
+
+  for (const file of walkMarkdown(root)) {
+    const rel = path.relative(root, file).split(path.sep).join('/')
+    const { data, body } = readNote(file)
+    all.push({
+      file,
+      rel,
+      title: String(data.title ?? firstHeading(body) ?? path.basename(rel, '.md')),
+      order: typeof data.order === 'number' ? data.order : Number.MAX_SAFE_INTEGER,
+      data,
+      private: isPrivate(data),
+    })
+  }
+
+  const published = all.filter((n) => !n.private)
+  const hidden = all.filter((n) => n.private)
+
+  const noteIndex = new Map<string, NoteRef>()
+  for (const n of published) {
+    const ref: NoteRef = { rel: n.rel, title: n.title }
+    noteIndex.set(n.rel.replace(/\.md$/, '').toLowerCase(), ref)
+    const base = path.basename(n.rel, '.md').toLowerCase()
+    if (!noteIndex.has(base)) noteIndex.set(base, ref)
+  }
+
+  const assetIndex = new Map<string, string>()
+  walkAssets(path.join(root, 'public'), path.join(root, 'public'), assetIndex, warnings)
+
+  return { root, all, published, hidden, noteIndex, assetIndex, warnings }
+}
+
+export interface SidebarSection {
+  dir: string
+  text: string
+}
+
+export interface SidebarItem {
+  text: string
+  link?: string
+  collapsed?: boolean
+  items?: SidebarItem[]
+}
+
+/**
+ * 按目录生成侧边栏。
+ * - 子目录 -> 可折叠分组
+ * - 同级按 frontmatter order 排序，没写的排后面，再按文件名
+ */
+export function buildSidebar(vault: Vault, sections: SidebarSection[]): Record<string, SidebarItem[]> {
+  const result: Record<string, SidebarItem[]> = {}
+
+  for (const section of sections) {
+    const prefix = section.dir + '/'
+    const notes = vault.published.filter((n) => n.rel.startsWith(prefix))
+
+    const rootNote = notes.find((n) => n.rel === prefix + 'index.md')
+    const items = buildTree(notes, prefix)
+
+    result['/' + section.dir + '/'] = [
+      {
+        text: section.text,
+        collapsed: false,
+        items: rootNote
+          ? [{ text: rootNote.title, link: '/' + section.dir + '/' }, ...items]
+          : items,
+      },
+    ]
+  }
+
+  return result
+}
+
+function buildTree(notes: NoteMeta[], prefix: string): SidebarItem[] {
+  const direct: NoteMeta[] = []
+  const dirs = new Map<string, NoteMeta[]>()
+
+  for (const n of notes) {
+    const rest = n.rel.slice(prefix.length)
+    if (rest === 'index.md') continue
+    const slash = rest.indexOf('/')
+    if (slash === -1) direct.push(n)
+    else {
+      const dir = rest.slice(0, slash)
+      if (!dirs.has(dir)) dirs.set(dir, [])
+      dirs.get(dir)!.push(n)
+    }
+  }
+
+  const sortNotes = (list: NoteMeta[]) =>
+    [...list].sort((a, b) => a.order - b.order || a.rel.localeCompare(b.rel, 'zh'))
+
+  const items: SidebarItem[] = sortNotes(direct).map((n) => ({
+    text: n.title,
+    link: '/' + n.rel.replace(/\.md$/, ''),
+  }))
+
+  for (const [dir, list] of [...dirs.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const dirPrefix = prefix + dir + '/'
+    const indexNote = list.find((n) => n.rel === dirPrefix + 'index.md')
+    items.push({
+      text: indexNote ? indexNote.title : dir,
+      collapsed: false,
+      items: indexNote
+        ? [{ text: indexNote.title, link: '/' + dirPrefix.replace(/\/$/, '') }, ...buildTree(list, dirPrefix)]
+        : buildTree(list, dirPrefix),
+    })
+  }
+
+  return items
+}
