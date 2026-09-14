@@ -1,0 +1,92 @@
+---
+title: "TShock直播插件"
+tags: [tshock]
+order: 160
+source: https://www.bilibili.com/read/cv21314034/
+sourceDate: 2023-01-19
+draft: false
+---
+
+# TShock直播插件
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv21314034/) · 2023-01-19
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+这个插件原作者是 **ArsiIksait** ，可以把直播间的弹幕同步到服务器里。第一次感觉到有粉丝的好处~~~ 
+
+话说这件事情可以追溯到去年11月底，听说ArsilkSait是手机远程电脑写的。拿到插件后发现不能工作，询问后才发现插件调用的是b站H5直播互动接口，插件没有走官方审核上架流程，我得自己申请一些信息填进去，然后她把源码发我了。看到服务器里能收到直播间的弹幕那一刻，还是觉得挺神奇的~~~，当时就发了一条动态。
+
+https://t.bilibili.com/730939542029205512
+
+![[live-stream-01.webp]]
+
+征求她同意后，今天把源码开源了。在基础之上加了 指令开关弹幕功能，允许将申请到的信息写到配置文件里，这样就能给各位泰拉主播使用了。
+
+插件下载地址：https://gitee.com/hufang360/TerrariaBLive
+
+功能在上面的地址已经写得比较清楚了，就不赘述了，这里讲讲，申请这些信息。
+
+目前有4个信息，需要主播填写。配置文件格式如下。
+
+```json
+{
+  "code": "身份码：访问 https://play-live.bilibili.com/ 获取",
+  "appId": "项目ID：访问 https://open-live.bilibili.com/open-manage 创建项目",
+  "accessKeyId": "开发密钥：访问 https://open-live.bilibili.com/document/quickStart.html 进行申请",
+  "accessKeySecret": "开发密钥"
+}
+```
+
+## 身份码
+
+不严谨滴讲，身份码就是直播间号。
+
+1.访问 https://play-live.bilibili.com/
+
+2.点击右侧的“身份码”
+
+3.弹出的小窗会显示身份码，点复制按钮即可。
+
+![[live-stream-02.webp]]
+
+## 项目ID
+
+因为不知道怎么上架插件，所以需要主播成为b站的开发者。当时觉得这里的都是h5，而我们这个是插件，形式不太一样。
+
+1、访问 https://open-live.bilibili.com/open-manage
+
+2、点击“创建项目”按钮
+
+![[live-stream-03.webp]]
+
+3、项目分类选择“互动玩法”（这个是默认选中的），其它的看着填写。
+
+![[live-stream-04.webp]]
+
+4、创建成功后，在项目详情里面能找到项目ID，参考下图：
+
+![[live-stream-05.webp]]
+
+## 开发密钥
+
+访问 https://open-live.bilibili.com/document/quickStart.html，点击“申请页面”超链接，进行申请。申请需要时间，不是即时的，我当时好像是第二天才收到的，现在正是过年时期，可能会慢一点。哦对了，需要填写邮箱的哦。
+
+![[live-stream-06.webp]]
+
+邮件里面会给到开发密钥，密钥有两部分组成，粘贴到配置文件的对应位置即可。
+
+![[live-stream-07.webp]]
+
+填写好的配置文件大概是这样的（以下信息仅用作格式示例，信息做了处理，是失效的）
+
+```json
+{
+  "code": "BS5F7Z349HF04",
+  "appId": "1670127837591",
+  "accessKeyId": "B8HfOO6oJanyL7CzDnPfYg9h",
+  "accessKeySecret": "TaPGcesj0aPoJpektLsyVzcuNAKKOU"
+}
+```
+
+祝各位泰拉主播，过年玩得开心，多收点礼物~~~

@@ -1,0 +1,50 @@
+---
+title: "关于Starbound存档"
+tags: [星界边境, starbound]
+order: 42
+source: https://www.bilibili.com/read/cv15316914/
+sourceDate: 2022-02-18
+draft: false
+---
+
+# 关于Starbound存档
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv15316914/) · 2022-02-18
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+Starbound 的存档保存在游戏目录下，由于目前不支持云存档，游戏卸载后，存档就没了。
+
+## 存档目录
+
+在游戏目录可以找到一个叫 “**storage**” （存储）的目录，人物和世界存档都在里面。
+
+Windows：**C:\\Program Files (x86)\\Steam\\steamApps\\common\\Starbound\\**storage****
+
+macOS：**~/Library/Application Support/Steam/steamApps/common/Starbound/storage**
+
+![[save-format-01.webp]]
+
+*存档目录*
+
+## 人物存档
+
+只是想备份人物存档，复制 xx.player 和 xx.shipworld 即可，例如：
+
+“**6b520f450bbcbf5d2f448dbfbbbe538d**.player”
+
+“**6b520f450bbcbf5d2f448dbfbbbe538d**.shipworld”
+
+需要注意的，不要修改文件名，否则游戏无法识别，尽管文件名很长，且不好辨识。
+
+![[save-format-02.webp]]
+
+*人物存档*
+
+## 世界存档
+
+universe 是 宇宙 的意思，顾名思义这个文件夹保存了你去到各个星球的存档记录。
+
+![[save-format-03.webp]]
+
+关于存档，个人就知道这么多，希望能对大家有所帮助！

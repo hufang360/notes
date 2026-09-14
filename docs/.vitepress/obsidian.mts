@@ -21,6 +21,8 @@ import type { NoteRef } from './vault.mts'
 export interface ObsidianOptions {
   /** 见 vault.mts 的 noteIndex */
   noteIndex: Map<string, NoteRef>
+  /** 有重名的文件名 */
+  ambiguousBases: string[]
   /** 见 vault.mts 的 assetIndex */
   assetIndex: Map<string, string>
 }
@@ -79,6 +81,7 @@ function resolveNoteLink(
   rawTarget: string,
   currentRel: string,
   noteIndex: Map<string, NoteRef>,
+  ambiguousBases: string[],
   warn: (msg: string) => void
 ): { href: string; title: string } | null {
   let target = rawTarget.trim()
@@ -93,16 +96,31 @@ function resolveNoteLink(
   if (anchor.startsWith('^')) anchor = ''
 
   const key = normalizeKey(target)
-  const found = noteIndex.get(key) ?? noteIndex.get(path.posix.basename(key))
+  let found = noteIndex.get(key)
+
+  // 后缀匹配：允许省略顶层分类，例如 [[terraria/tshock]] -> games/terraria/tshock
+  if (!found && key.includes('/')) {
+    const hits = [...noteIndex.entries()].filter(([k]) => k.includes('/') && k.endsWith('/' + key))
+    if (hits.length === 1) found = hits[0][1]
+    else if (hits.length > 1) {
+      warn(`[[${rawTarget}]] 有歧义，同时匹配到：${hits.map(([k]) => k).join('、')}`)
+      return null
+    }
+  }
+
   if (!found) {
-    warn(`找不到笔记 [[${rawTarget}]]`)
+    warn(
+      ambiguousBases.includes(key)
+        ? `[[${rawTarget}]] 不明确：仓库里有多个叫 ${key}.md 的笔记，请写完整路径`
+        : `找不到笔记 [[${rawTarget}]]`
+    )
     return null
   }
 
   const fromDir = path.posix.dirname(currentRel)
   let href = path.posix.relative(fromDir === '.' ? '' : fromDir, found.rel)
   if (!href.startsWith('.')) href = './' + href
-  if (anchor) href += '#' + (anchor.startsWith('^') ? '' : slugify(anchor))
+  if (anchor) href += '#' + slugify(anchor)
 
   return { href, title: found.title }
 }
@@ -183,6 +201,7 @@ function expandText(
           pipe === -1 ? inner : inner.slice(0, pipe),
           ctx.currentRel,
           ctx.opts.noteIndex,
+          ctx.opts.ambiguousBases,
           ctx.warn
         )
         if (target) {
@@ -196,6 +215,7 @@ function expandText(
         pipe === -1 ? inner : inner.slice(0, pipe),
         ctx.currentRel,
         ctx.opts.noteIndex,
+        ctx.opts.ambiguousBases,
         ctx.warn
       )
       if (target) {

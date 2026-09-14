@@ -1,0 +1,157 @@
+---
+title: "TShock插件：WorldModify | 简易的世界修改器"
+tags: [泰拉瑞亚, tshock, tshock插件, 秘密世界种子]
+order: 250
+source: https://www.bilibili.com/read/cv11374164/
+sourceDate: 2021-05-21
+draft: false
+---
+
+# TShock插件：WorldModify | 简易的世界修改器
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv11374164/) · 2021-05-21
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+WorldModify 是一个tshock服务器插件，定位是一个 **简易的世界修改器**。
+
+起初总有人问，你开的是什么难度的、什么大小的地图，是猩红还是腐化啊。糟糕！服开多了，回答不上来了。于是写了这么个小插件。
+
+除了查看地图信息外，还想要实现TEdit的**世界属性**面板这部分。
+
+![[world-modify-01.webp]]
+
+*TEdit界面截图*
+
+目前支持查询和修改 世界名称、ID、大小，以及月相、月亮样式、秘密世界特性 和 boss进度等，另外还支持修改种子名。
+
+（修改种子名，并不能改变地型，也无法开关秘密世界特性，基本上没什么用，可能这就是TEdit不支持修改种子名的原因吧）
+
+不同于TEdit，插件的编辑功能都是实时生效的，省去关开服操作。实际上使用起来还是有蛮多即有趣有方便的地方。
+
+案例1：当你看到有人在你身边疯狂喝红药水时（某次开的旅行，启用了物品研究），你可以立即通过指令将ftw特性取消掉，这样他将会获得一堆负面buff……真棒，不愧是我！
+
+案例2：不同月相下NPC出售的物品不同，此时你可以通过修改月相来买到指定物品，在游戏里直接切换月相，是不是有点方便呢！
+
+## 所有指令
+
+输入“/wm help”可以获取全部指令，wm是**W**orld**M**odify的简写。
+
+本文是截控制台的图，实际上这些指令都可以在游戏里执行。
+
+![[world-modify-02.webp]]
+
+给普通用户分配权限，如果你觉得有必要的话。
+
+```bash
+# wm指令权限
+/group addperm default worldmodify
+
+# 月相权限
+/group addperm default moonphase
+
+# 月亮样式权限
+/group addperm default moonstyle
+
+# boss管理权限
+/group addperm default bossmanage
+
+# npc管理权限
+/group addperm default npcmanage
+```
+
+## 世界信息
+
+/wm info 指令在原版 /worldinfo 指令基础上增加了一些信息，事实上这部分的代码是完全参考原版的。
+
+![[world-modify-03.webp]]
+
+![[world-modify-04.webp]]
+
+*tshock原版指令*
+
+## 修改世界信息
+
+这些世界信息除了大小以外，几乎都可以更改。这里额外实现了一个修改种子的功能，虽然这没什么用。需要指出的是，将种子名改成05162020，不会开启0516特性，ftw亦然。
+
+此外修改难度请使用原版指令，例如将难度改成大师可以执行“/worldmode master”或“/worldmode 2”，normal~journey，依次对应 0~3，另外这里的creative（创造模式）完全等于 journey（旅行模式）。
+
+![[world-modify-05.webp]]
+
+*可用的修改指令*
+
+![[world-modify-06.webp]]
+
+*原版修改难度指令*
+
+## 月相 和 月亮样式
+
+输入 “/moon help”，可以查询使用方法，例如更改为满月，可以执行“/moon 满月”或“/moon 1”，满月~盈凸月，依次对应1~8。为了让修改生效，月相修改的同时，指令会自动将时间调到晚上。
+
+![[world-modify-07.webp]]
+
+*月相修改方法*
+
+月亮样式的用法和月相基本相同，同样地修改月亮样式的同时时间也会被调到晚上。
+
+![[world-modify-08.webp]]
+
+*月亮样式修改方法*
+
+## BOSS管理
+
+![[world-modify-09.webp]]
+
+*全部指令*
+
+/boss info，主要受到 “进度查询”插件启发，但感觉还是TEdit那种全部列出来+勾选框的方式比较好，于是处理成已击败boss名前面会打勾（√），未击败则是减号（-）
+
+![[world-modify-10.webp]]
+
+*boss进度*
+
+![[world-modify-11.webp]]
+
+*TEdit上的BOSS进度*
+
+/boss toggle <boss名>，支持切换boss击败状态。boss名做了很多判断，中文英文都可以，英文部分和 /spawnboss 完全一致，另外还加入一些口语化的中文，例如 猪鲨、光女、克眼、克脑、世吞、黑长直 和 铁长直等，全部内容可以输入“/boss toggle help”查询。
+
+![[world-modify-12.webp]]
+
+![[world-modify-13.webp]]
+
+*toggle指令帮助*
+
+/boss spawn，是/sb召唤指令的一个备注
+
+![[world-modify-14.webp]]
+
+## npc管理
+
+与boss管理类似。
+
+![[world-modify-15.webp]]
+
+![[world-modify-16.webp]]
+
+![[world-modify-17.webp]]
+
+![[world-modify-18.webp]]
+
+![[world-modify-19.webp]]
+
+## 全物品研究解锁
+
+/wm research，可以解锁全部物品的研究，tshock上的物品研究机制与原版不同，数据是保存在tshock.sqlite数据库中，且是与地图id绑定的。
+
+目前实现得并不完美，全解锁后要重新开服才能生效。
+
+![[world-modify-20.webp]]
+
+## 插件下载
+
+此插件是开源的，有能力者可以拿源代码自己修改哦。
+
+插件下载地址：**https://gitee.com/hufang360/TShockWorldModify/releases/**
+
+开源地址：**https://gitee.com/hufang360/TShockWorldModify/**

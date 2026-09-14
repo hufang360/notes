@@ -1,0 +1,368 @@
+---
+title: "TShock高阶应用：REST API"
+tags: [泰拉瑞亚, Terraria, tshock]
+order: 211
+source: https://www.bilibili.com/read/cv11045619/
+sourceDate: 2021-04-26
+draft: false
+---
+
+# TShock高阶应用：REST API
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv11045619/) · 2021-04-26
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+简单来说这是一种全新的给服务器下达指令的方法，只需在浏览器输入连接即可。
+
+REST，即Representational State Transfer的缩写，大意是"表现层状态转化"。它是前后端分离最佳实践，是开发的一套规范，不是框架。
+
+## 开启REST功能
+
+将config.json中的“RestApiEnabled”改为true，重新开服。
+
+在浏览器访问 “http://**127.0.0.1**:**7878**”。如果是服务器，请将127.0.0.1改成你服务器的ip，你将看到如下内容：
+
+![[rest-api-01.webp]]
+
+## 获得token（令牌）
+
+访问“http://127.0.0.1:7878**/v2/token/create**?**username**\=hf&**password**\=1234”，请将 hf 和 1234 是你服务器里的玩家名和对应的密码。
+
+如下图所示，“2251F1D......56A63”就是token，接下来的很多操作都需要提供token。
+
+![[rest-api-02.webp]]
+
+## 测试token
+
+访问“http://127.0.0.1:7878**/tokentest**?**token**\=xxx”可以测试token是否有效，status为200说明有效，status为403说明无效。
+
+![[rest-api-03.webp]]
+
+## token持久化
+
+通过上述方式生成token，将在服务器重启后失效。要想token持久有效，可以直接写进config.json里，下面是配置参考。
+
+如下图所示，你可以设置1个或多个token，甚至可以将token定义成 simpleToken 这种，方便记忆，但为了安全，最好弄一个别人猜不到的token。token对应的用户名和用户所属组，应正确填写。
+
+```js
+{
+  "Settings": {
+
+    ...
+
+    "RestApiEnabled": true,
+    "RestApiPort": 7878,
+    "LogRest": true,
+    "EnableTokenEndpointAuthentication": true,
+    "RESTMaximumRequestsPerInterval": 5,
+    "RESTRequestBucketDecreaseIntervalMinutes": 1,
+    "ApplicationRestTokens": {
+      "2251F1D29B78059A89C2220BFC7F1C5C15E6674C8E581F14ECAA271E47356A63":{
+        "Username": "hf",
+        "UserGroupName": "superadmin"
+      },
+      "simpleToken":{
+        "Username": "高端玩家",
+        "UserGroupName": "default"
+      }
+    }
+  }
+}
+```
+
+![[rest-api-04.webp]]
+
+## 案例1：查询在线玩家
+
+通过“**/lists/players**”可以查询在线玩家，http://127.0.0.1:7878/lists/players?token\=simpleToken。
+
+![[rest-api-05.webp]]
+
+## 案例2：执行命令行指令
+
+要查询在线玩家情况，还可以通过“**/v3/server/rawcmd**”接口，让服务器执行命令行指令，并返回命令行输出。http://127.0.0.1:7878**/v3/server/rawcmd**?**token**\=simpleToken&**cmd**\=/playing。
+
+此接口如万金油般地存在，命令行上能做的接口都能做。而且对于服主和玩家来说指令反而比接口要更加亲切。
+
+![[rest-api-06.webp]]
+
+## 实践：重置密码
+
+目前我还不知道如何查看用户的密码，有联机的小伙伴忘记密码，我只能通过编辑tshock.sqlite数据库，复制一个新的人物给他，但是接口提供了重置密码的可能。
+
+通过“**/v2/users/update**”接口重置用户密码，http://127.0.0.1:7878**/v2/users/update**?**token**\=simpleToken&**user**\=hf&**password**\=1234
+
+![[rest-api-07.webp]]
+
+## 更多接口
+
+官方文档列举了不少接口，但个人觉得实用性并不强，很多功能都可以通过 rawcmd 接口来实现，感兴趣的可以去官方文档查询。
+
+官方文档：https://tshock.readme.io/reference
+
+转载：https://www.yuque.com/hufang/bv/reference
+
+![[rest-api-08.webp]]
+
+## 更多接口：VSCode
+
+REST API非常有规律，但一个个的参数拼接起来后，地址就变得很长，不易阅读，很容易出错。
+
+实际测试，有使用两个工具。一个是 VSCode + REST Client，另一个是 Postman。我用这这两个工具测试了将近全部接口，大家可以拿来测试，以了解接口使用和特性。
+
+REST Client是一个VSCode插件，可以在VSCode搜索安装。
+
+![[rest-api-09.webp]]
+
+安装好插件后，新建例如 “TShock-REST-API.http”的文档，其中“.http”是文件的扩展名，然后将下面的代码粘贴进去
+
+```bash
+# https://tshock.readme.io/reference
+
+@host = 127.0.0.1
+# @host = 192.168.3.15
+@port = 7878
+@token = simpleToken
+@url = http://{{host}}:{{port}}
+
+# =============================
+
+# 查询所有玩家列表
+# 获取有关所有已连接用户的详细用户信息
+# 并且可以通过指定。键值对过滤用户来进行过滤，其中键是字段，值是用户字段值。
+# 此指令不需要特殊权限
+# /lists/players?token={{token}}
+GET {{url}}/v2/players/list?token={{token}}
+
+# 杀死一个玩家，可以伪装某位玩家杀死一位玩家
+GET {{url}}/v2/players/kill?token={{token}}
+    &player=hf
+    &from=队长自己人，别开枪
+
+# 踢人
+GET {{url}}/v2/players/kick?token={{token}}
+    &player=hf
+    &reason=不要再调皮了！
+
+# 禁言
+GET {{url}}/v2/players/mute?token={{token}}
+    &player=hf
+    &reason=请你安静点！
+
+# 解除禁言
+GET {{url}}/v2/players/unmute?token={{token}}
+    &player=hf
+    &reason=下次注意点！
+
+@。。bans。。 = =============================
+
+# 查看特定禁令的详细信息
+GET {{url}}/v2/bans/read?token={{token}}
+    &ban=hf
+    &type=name
+
+# BanDestroyV2 400
+GET {{url}}/v2/bans/destroy?token={{token}}
+    &ban=hf
+    &type=name
+    &caseinsensitive=false
+
+# 查看ban列表
+GET {{url}}/v2/bans/list?token={{token}}
+
+# # ban人 404
+# GET {{url}}/v2/players/ban
+#     ?token={{token}}
+#     &player=hf
+#     &reason=由于你不遵守服务器规则，已被禁止进入服务器！
+# ###
+
+# BanCreate 400
+# GET {{url}}/bans/create
+#     ?token={{token}}
+#     &name=hf
+#     &ip=192.168.3.12
+#     &reason=你因为作弊，被禁止进入服务器
+
+@。。user。。 = =============================
+# 查询在线玩家
+GET {{url}}/v2/users/activelist?token={{token}}
+
+# 创建账号
+GET {{url}}/v2/users/create?token={{token}}
+    &user=hf
+    &group=GM
+    &password=1234
+
+# 删除账号
+GET {{url}}/v2/users/destroy?token={{token}}
+    &user=hf
+    &type=name
+# type, user值类型，id或name。
+
+# 列出用户的详细信息
+GET {{url}}/v2/users/read?token={{token}}
+    &user=hf
+    &type=name
+# type, id user为id值，name user为用户名
+
+# 查询用户信息，含背包
+GET {{url}}/v3/players/read?token={{token}}
+    &player=hf
+
+# 更新用户信息。可以重置密码
+GET {{url}}/v2/users/update?token={{token}}
+    &user=hf
+    &type=name
+    &password=721501
+    # &group=default
+# password 和 group 需二选一
+# group, default, GM, superadmin
+
+# 列出数据库中的所有用户。
+GET {{url}}/v2/users/list?token={{token}}
+
+@。。group。。 = =============================
+# 创建用户组
+GET {{url}}/v2/groups/create?token={{token}}
+    &group=GM1
+    &permissions=!tshock.ignore.ssc
+    # &chatcolor=255,255,255
+    # &parent=trustedadmin
+
+# 删除用户组
+GET {{url}}/v2/groups/destroy?token={{token}}
+    &group=GM1
+
+# 查询所有的用户组
+GET {{url}}/v2/groups/list?token={{token}}
+# guest, default, vip, GM
+# newadmin, admin, trustedadmin, owner, superadmin
+
+# 查询某个用户组的配置
+GET {{url}}/v2/groups/read?token={{token}}
+    &group=GM1
+
+# 更新用户组（重写全部权限）
+GET {{url}}/v2/groups/update?token={{token}}
+    &group=GM1
+# &permissions=!tshock.ignore.ssc
+# &chatcolor=255,255,255
+# &parent=trustedadmin
+
+@。。server。。 = =============================
+# 在服务器上执行指令，并返回指令输出。
+GET {{url}}/v3/server/rawcmd?token={{token}}
+    &cmd=/playing
+
+# 重载服务器配置
+GET {{url}}/v3/server/reload?token={{token}}
+
+# 返回规则文本
+GET {{url}}/v3/server/rules?token={{token}}
+
+# 显示服务器状态
+GET {{url}}/v2/server/status?token={{token}}
+    &players=false
+    &rules=true
+
+# 广播消息
+GET {{url}}/v2/server/broadcast?token={{token}}
+    &msg=hf在做测试，今天不开服
+# &msg=马上要关服了 大家都退一下
+
+# 查询欢迎词
+GET {{url}}/v3/server/motd?token={{token}}
+
+# 关服
+GET {{url}}/v2/server/off?token={{token}}
+    &confirm=true
+
+@。。world。。 = =============================
+# 显示世界信息
+GET {{url}}/world/read?token={{token}}
+
+# 落下一颗陨石
+GET {{url}}/world/meteor?token={{token}}
+
+# 打开或关闭血月
+# /v3/world/bloodmoon?state=[true|false]
+# /world/bloodmoon/[true|false]
+GET {{url}}/world/bloodmoon/false?token={{token}}
+
+GET {{url}}/world/bloodmoon/true?token={{token}}
+
+# 屠杀NPC
+GET {{url}}/v2/world/butcher?token={{token}}
+    &killfriendly=false
+# killfriendly,是否清理NPC
+
+# 保存世界（与在控制台中使用/save命令相同）
+GET {{url}}/v2/world/save?token={{token}}
+
+# 打开或关闭自动保存功能
+GET {{url}}/v2/world/autosave/state/true?token={{token}}
+
+# ======================
+
+@。。token。。 = =============================
+# 获取token
+GET {{url}}/v2/token/create
+    ?username=hf
+    &password=721501
+
+# 测试token
+GET {{url}}/tokentest?token={{token}}
+
+# 销毁token
+# http://IP-ADDRESS-OF-SERVER:RESTAPI-PORT/token/destroy/{token}?token={token}
+@mytoken=1DB46B3C6509122169E7332C4AA7A54A3ECA64F07AF7017DCE84F038EC95B718
+GET {{url}}/token/destroy/{{mytoken}}?token={{token}}
+
+@。。rawcmd。。 = =============================
+# 在服务器上执行指令，并返回指令输出。
+@rawcmd={{url}}/v3/server/rawcmd?token={{token}}&cmd=/
+
+@。playing =
+GET {{rawcmd}}playing
+
+GET {{rawcmd}}time 08:00
+
+# /worldevent <event type>",
+# "Valid event types: meteor, fullmoon, bloodmoon, eclipse, invasion, sandstorm, rain",
+# "Valid invasion types if spawning an invasion: goblins, snowmen, pirates, pumpkinmoon, frostmoon, martians"
+GET {{rawcmd}}worldevent meteor
+
+GET {{rawcmd}}worldevent fullmoon
+
+GET {{rawcmd}}worldevent sandstorm
+
+GET {{rawcmd}}worldevent rain
+
+GET {{rawcmd}}worldevent invasion goblins
+
+GET {{rawcmd}}worldevent invasion
+
+@rPlayer=hf
+@rItem=天顶剑
+@rItem=4444
+GET {{rawcmd}}g {{rItem}} {{rPlayer}}
+
+```
+
+所有的接口都保存在这一个 http 文件里，点击链接上方的 “Send Request”文字超链接，可以执行接口请求，并且在右侧面板会返回请求结果。
+
+![[rest-api-10.webp]]
+
+## 更多接口：Postman
+
+相比VSCode加插件的方式，Postman使用起来更加清晰优雅，坏处就是录入比较麻烦，而且工具使用起来也有一点门槛。为了让大家能上手使用，我将所有接口导出成json了，在Postman里点击Import按钮，选择json进行导入。
+
+![[rest-api-11.webp]]
+
+VSCode 和 Postman 的测试物料以及安装包都放网盘了
+
+链接：https://pan.baidu.com/s/1jE3GAK3STdkJL1YgvwD8fw
+
+提取码：rest

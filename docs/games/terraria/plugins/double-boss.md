@@ -1,0 +1,99 @@
+---
+title: "TShock插件：DoubleBoss | 好事成双"
+tags: [泰拉瑞亚, terraria, tshock]
+order: 200
+source: https://www.bilibili.com/read/cv17079582/
+sourceDate: 2022-06-13
+draft: false
+---
+
+# TShock插件：DoubleBoss | 好事成双
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv17079582/) · 2022-06-13
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+有小伙伴问“能不能实现每次召唤boss都出来2只的插件”。
+
+之前写大地动插件的时候，写过类似的功能，感觉挺简单的，就写了个。其实前些天直播闲聊有聊到这个玩法，说不定下次就可以拿来开荒。
+
+这个插件够简单，没有指令，没有配置文件，拷贝到插件目录即可。
+
+安装完成后，召唤boss的时候，会多生成一个。
+
+实现的机制是，当生成列表中的boss时，看看是不是只有一只，如果是就再召唤一只。
+
+目前支持的boss有：
+
+```js
+史莱姆王
+克苏鲁之眼
+世界吞噬怪
+克苏鲁之脑
+蜂王
+骷髅王
+鹿角怪
+血肉墙
+毁灭者
+双子魔眼
+机械骷髅王
+世纪之花
+石巨人
+史莱姆皇后
+光之女皇
+猪龙鱼公爵
+教徒
+月亮领主
+```
+
+有人可能要问了，怎么没四柱，其实 击败两个教徒后，会生成两遍四柱，这样就有8个柱子了。
+
+依旧秉持“学习交流”目的，插件和插件源码都开源了。
+
+开源地址：https://gitee.com/hufang360/TShockDoubleBoss
+
+一些截图
+
+![[double-boss-01.webp]]
+
+*注视*
+
+![[double-boss-02.webp]]
+
+*两只史王，跑得快，跑得快，一只没有耳朵，一只没有尾巴……*
+
+![[double-boss-03.webp]]
+
+*花开两朵，各表一枝。*
+
+![[double-boss-04.webp]]
+
+*两只小蜜蜂啊，飞在花丛中啊，左飞飞，右飞飞。*
+
+![[double-boss-05.webp]]
+
+*血肉墙三明治*
+
+![[double-boss-06.webp]]
+
+*谁出门没带脑子（bushi）*
+
+![[double-boss-07.webp]]
+
+*双龙戏珠*
+
+![[double-boss-08.webp]]
+
+*四位一体*
+
+![[double-boss-09.webp]]
+
+*开“心”麻花*
+
+![[double-boss-10.webp]]
+
+*魔鬼下班*
+
+![[double-boss-11.webp]]
+
+*左右护法*

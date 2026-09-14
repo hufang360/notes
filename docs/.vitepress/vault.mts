@@ -121,8 +121,17 @@ export interface Vault {
   published: NoteMeta[]
   /** 被 frontmatter 挡下来的笔记 */
   hidden: NoteMeta[]
-  /** 笔记索引：小写文件名 / 小写相对路径（去掉 .md） -> 笔记 */
+  /**
+   * 双链索引。每个键都是一个可用的写法：
+   *   - 完整相对路径           games/terraria/tshock/cmd-warp
+   *   - index.md 去掉 /index  games/terraria/tshock
+   *   - 文件名（全局唯一时）    cmd-warp
+   * 解析时还会做一次后缀匹配（见 obsidian.mts），
+   * 所以 [[terraria/tshock]] 这种省略顶层分类的写法也能用。
+   */
   noteIndex: Map<string, NoteRef>
+  /** 有重名的文件名，用 [[名字]] 引用时会报错提醒写完整路径 */
+  ambiguousBases: string[]
   /** 图片等资源索引：小写文件名 -> /xxx/yyy.png 站内 URL */
   assetIndex: Map<string, string>
   warnings: string[]
@@ -170,17 +179,38 @@ export function loadVault(root: string): Vault {
   const hidden = all.filter((n) => n.private)
 
   const noteIndex = new Map<string, NoteRef>()
+  const byBase = new Map<string, NoteRef[]>()
+
   for (const n of published) {
     const ref: NoteRef = { rel: n.rel, title: n.title }
-    noteIndex.set(n.rel.replace(/\.md$/, '').toLowerCase(), ref)
+    const full = n.rel.replace(/\.md$/, '').toLowerCase()
+
+    if (!noteIndex.has(full)) noteIndex.set(full, ref)
+    // 目录的落地页：允许用目录名直呼，例如 [[terraria/tshock]]
+    if (full.endsWith('/index')) {
+      const dirKey = full.slice(0, -'/index'.length)
+      if (!noteIndex.has(dirKey)) noteIndex.set(dirKey, ref)
+    }
+
     const base = path.basename(n.rel, '.md').toLowerCase()
-    if (!noteIndex.has(base)) noteIndex.set(base, ref)
+    if (!byBase.has(base)) byBase.set(base, [])
+    byBase.get(base)!.push(ref)
+  }
+
+  // 文件名只在不重名时才作为键，否则 [[config]] 到底指哪一篇全靠运气
+  const ambiguousBases: string[] = []
+  for (const [base, refs] of byBase) {
+    if (refs.length === 1) {
+      if (!noteIndex.has(base)) noteIndex.set(base, refs[0])
+    } else if (!noteIndex.has(base)) {
+      ambiguousBases.push(base)
+    }
   }
 
   const assetIndex = new Map<string, string>()
   walkAssets(path.join(root, 'public'), path.join(root, 'public'), assetIndex, warnings)
 
-  return { root, all, published, hidden, noteIndex, assetIndex, warnings }
+  return { root, all, published, hidden, noteIndex, ambiguousBases, assetIndex, warnings }
 }
 
 export interface SidebarSection {

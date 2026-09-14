@@ -1,12 +1,25 @@
 ---
 title: Terraria TShock 开服笔记
 tags: [terraria, tshock, 游戏, 开服]
-order: 31
+order: 10
 ---
 
 # Terraria TShock 开服笔记
 
 TShock 是 Terraria 的服务端 + 插件框架。这篇记录从零到能玩的全过程。
+
+## 这一组里还有什么
+
+| 分类 | 篇目 |
+| --- | --- |
+| 开服 | [[server-setup\|从零搭建]] · [[server-config\|配置篇]] · [[tshock5-setup\|TShock 5.0 补充]] · [[raspberry-pi\|树莓派]] · [[centos8-offline-mono\|离线装 mono]] |
+| 上手 | [[getting-started\|TShock 上手玩（一）]] · [[chinese-support\|开启中文]] |
+| 连载 | [[vol26001-fuzhu-memories\|vol26001 腐竹的回忆]] · [[vol26002-52hz-whale\|vol26002 52赫兹的鲸]] · [[vol26003-mcsmanager\|vol26003 MCSManager]] · [[vol26004-vanilla-server\|vol26004 原版服务器]] |
+| 指令 | [[cmd-warp\|/warp 传送点]] · [[cmd-worldinfo\|/worldinfo /worldmode]] · [[cmd-worldevent\|/worldevent 世界事件]] · [[cmd-summon\|/sb /sm 召唤]] |
+| 管理 | [[whitelist-and-ban\|白名单与 ban]] · [[backup-and-anticheat\|备份与反作弊]] · [[auto-backup\|自动备份地图]] · [[forced-fresh-start\|强制开荒]] · [[import-save-to-fresh-start\|存档导入强制开荒]] |
+| 进阶 | [[journey-mode\|旅行模式浅析]] · [[rest-api\|REST API]] · [[reference\|TShock 参考]] |
+
+插件相关的看 [[plugins/index|TShock 插件]] 那组。
 
 ## 整体结构
 

@@ -1,0 +1,72 @@
+---
+title: "TShock插件：鱼店配置编辑器"
+tags: [鱼店, tshock]
+order: 120
+source: https://www.bilibili.com/read/cv23345818/
+sourceDate: 2023-04-27
+draft: false
+---
+
+# TShock插件：鱼店配置编辑器
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv23345818/) · 2023-04-27
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+这其实是一个网页，用它可以直观地编辑鱼店的配置文件。啊，什么，你还不知道鱼店是啥？那么请看下面的这期视频：
+
+> 参考：[Bilibili 专栏 cv680380166](https://www.bilibili.com/read/cv680380166/)
+
+因为它是网页，所以支持电脑端和手机端。
+
+大致上写完，最近没啥时间了，先发出来，以免烂手里了。偷个懒，先这样。发现bug了，有啥好建议，记得给我留言哈！！！
+
+## 使用方式1：
+
+链接1：https://hf-fish.netlify.app
+
+链接2：https://hf-fish.vercel.app
+
+（对，访问网页即可）
+
+（链接1：QQ会识别成危险网站，实际上我什么也没做，介意的可以使用“使用方式2”，也可以把网页上传到自己的服务器上）
+
+（链接2：我发文章的时候，只有福建地区的网络能打开）
+
+（一些前端开发者会把网页部署在这两个平台，因为是免费的，可以不用自己弄网站备案这些。）
+
+![[fishshop-config-01.webp]]
+
+## 使用方式2：
+
+如果链接访问不了，可以把网页下载到本地，下载地址：https://gitee.com/hufang360/FishShopConfig/releases/download/v0.1/FishShopConfig-v0.1-20230427.zip
+
+（复制上面的链接，粘贴到浏览器地址栏，然后敲enter键，就开始下载了）
+
+（下载完成后，完全解压，然后双击“index.html”，会用浏览器打开编辑器）
+
+## 开源地址
+
+和以往的插件一样，这个也是开源的，项目链接：https://gitee.com/hufang360/FishShopConfig
+
+## 电脑端截图
+
+![[fishshop-config-02.webp]]
+
+![[fishshop-config-03.webp]]
+
+![[fishshop-config-04.webp]]
+
+## 手机端截图
+
+![[fishshop-config-05.webp]]
+
+![[fishshop-config-06.webp]]
+
+![[fishshop-config-07.webp]]
+
+## 最后
+
+鱼店插件和这个编辑器写得不严谨，编辑完后记得，开服检查下，编辑过一两次后就有经验了。
+
+秘密：鱼店1.4.4版有在偷偷重构中，由于步子迈得太大，烂我脑子里了，等有空再捯饬捯饬~~

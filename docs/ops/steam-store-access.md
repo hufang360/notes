@@ -1,0 +1,83 @@
+---
+title: "解决 Steam商店 访问问题"
+tags: [steam, terraria]
+order: 100
+source: https://www.bilibili.com/read/cv15231728/
+sourceDate: 2022-02-12
+draft: false
+---
+
+# 解决 Steam商店 访问问题
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv15231728/) · 2022-02-12
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+我家的网络访问steam一直不顺畅，时好时坏，多人联机几乎不可能，以前只要能启动游戏就可以了，就没在意。
+
+泰拉1.4.2更新 创意工坊之后，玩家可以上传材质包、地图、声音等资源到Steam创意工坊，上面有不少有趣的内容，以及非常有意思的好点子，所以每隔一段时间就想去看看。尤其最近泰拉官方会在steam上同步更新每月一期的开发者报告。
+
+偶尔会玩一下 饥荒联机版 和 1.4的tml，都要从steam社区下载mod。
+
+经过众小伙伴的建议 以及 一段时间的折腾 我整理了这3个继续访问steam社区的方法。
+
+纯属个人经验分享，有不严谨的请多多包涵，如果你也有这个问题，不妨试试下面几个方法。
+
+## 修改Host
+
+这个方法现在几乎不可用，但也是一个办法。
+
+Windows上的方法是 用记事本打开 C:\\Windows\\System32\\drivers\\etc\\hosts 文件
+
+复制下面的内容，并粘贴至记事本的最下面一行
+
+```c
+23.32.241.19 cdn.steamcommunity.com
+23.32.241.19 cdn.steampowered.com
+23.32.241.19 cdn.store.steampowered.com
+23.32.241.19 media.steampowered.com
+23.32.241.19 cloud.steampowered.com
+23.32.241.19 storefront.steampowered.com
+23.32.241.19 store.valvesoftware.com
+23.32.241.40 cdn.akamai.steamstatic.com
+23.32.241.40 steamcommunity-a.akamaihd.net
+23.32.241.40 steamcommunity.com
+```
+
+建议用ping指令测试一下ip地址，注意看下图的丢失情况，丢失严重的话就得网上找寻其它的ip。
+
+![[steam-store-access-01.webp]]
+
+## UU加速器
+
+联机时小伙伴推荐给我的，推荐的理由是：加速steam社区免费。还真是。
+
+非广告，个人用了一段时间，觉得还蛮好用的，虽然1418天后就不能免费加速了，其实好用的话，是可以考虑付费的。另外 UU加速器 还支持macOS。
+
+启动uu加速器后，右上角搜关键字“steam”，鼠标移动到 **Steam商店** 搜索结果上，然后点“立即加速”按钮。
+
+![[steam-store-access-02.webp]]
+
+看到如下画面，表示加速已开启，这个时候就可以流畅访问steam创意工坊什么的了。
+
+![[steam-store-access-03.webp]]
+
+个人推荐打开“启动后自动加速”设置，这样每次启动加速器后，直接切到steam就好了，比较方便。
+
+![[steam-store-access-04.webp]]
+
+## Steam++
+
+这个软件是 tg (@turegarderas) 推荐给我的。个人还没有用，据说挺好用的。
+
+这款软件是开源的，不用担心安全性。
+
+支持 Windows、macOS、Linux 和 iOS。(๑•̀ㅂ•́)و✧
+
+![[steam-store-access-05.webp]]
+
+这个是开发者做的视频。
+
+> 参考：[Bilibili 专栏 cv375320032](https://www.bilibili.com/read/cv375320032/)
+
+官方地址：https://www.steampp.net/

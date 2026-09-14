@@ -1,0 +1,392 @@
+---
+title: "泰拉瑞亚：多人联机服务器搭建 · 配置篇"
+tags: [服务器, 泰拉瑞亚, tshock]
+order: 51
+source: https://www.bilibili.com/read/cv10687110/
+sourceDate: 2021-04-07
+draft: false
+---
+
+# 泰拉瑞亚：多人联机服务器搭建 · 配置篇
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv10687110/) · 2021-04-07
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+\* 本文仅面向服主，是联机服搭建的姊妹篇。
+
+> 参考：[Bilibili 专栏 cv9479081](https://www.bilibili.com/read/cv9479081/)
+
+书接上文，up主没写tshock配置相关的内容，说是先挖个坑，待后面补上，但是一直没补，一来关注开服技术的人不多，更新动力也少了，二来up主自己也不太懂。开了几个月的服务器后，感觉自己又行了。
+
+tshock其实是一个Windows项目，Linux和Mac上安装mono后也能运行，绝大多数服务器都是Linux系统，这也是tshock的主要场景，不过本文以在Windows运行来说明相关内容。
+
+\* 再挖个坑，本文阅读量过万，再写一篇如何使用tshock指令的文章 /滑稽。
+
+## TShock文件结构
+
+下面是tshock解压后的样子，TerrariaServer.exe 是启动程序，ServerPlugins是插件目录，拷贝dll格式的插件到ServerPlugins目录下，重新开服就能启用插件。
+
+![[server-config-01.webp]]
+
+## 配置文件说明
+
+双击TerrariaServer.exe即可启动，启动后的样子如下图：
+
+\* 启动时自动读取本地的泰拉存档。
+
+Windows读取：%userprofile%\\Documents\\My Games\\Terraria\\Worlds
+
+Linux读取：/root/.local/share/Terraria/Worlds
+
+![[server-config-02.webp]]
+
+**首次使用需启动一次tshock，以生成配置文件，在此基础上修改对应设置才能正常开服玩耍。**
+
+首次启动tshock，别急着开服，看到上图样子后，按Ctrl+C退出。此时目录下会多出 **tshock**的文件夹 和 **ServerLog.txt**。tshock文件夹下的文件情况：
+
+![[server-config-03.webp]]
+
+**xx.log**，是日志文件，每次开服，都会生成一个，在里面能看到大家的聊天记录，当然可以设置为不记录。
+
+**motd.txt**，是欢迎语，每次进入游戏时左下角聊天区显示内容，下面是稍加汉化的样子：
+
+```bash
+欢迎来到 [c/FF0000:%map%] on [c/00FFFF:TShock for Terraria].
+[c/00FF00:在线玩家:] [c/FFFF00:%players%]
+输入 [c/FF0000:/help] 获取更多指令。
+```
+
+如果大家太肝，也可以改成这样，稍微提示一下：
+
+```bash
+欢迎来到 [c/FF0000:%map%]
+[c/00FF00:在线玩家:] [c/FFFF00:%players%]
+.
+[c/FF5643:         健康游戏忠告]
+适度游戏益脑，过度游戏伤身。
+合理安排时间，享受健康生活。
+.
+```
+
+**rules.txt**，游戏规则，玩家在游戏里输入“/rules”指令可以查看里面的内容。
+
+**whitelist.txt**，白名单，里面填写IP地址。
+
+**config.json**，主配置文件，吃透这个文件很重要，首先建议将 "RequireLogin": 改为 true，其它相关常用字段解释如下：（ps：json不支持注释，实际配置时，不要写成下方这样）
+
+```json
+{
+  "ServerPassword": "", //服务器密码
+  "ServerPort": 7777,		//服务器端口，再次修改需重新启动服务器
+  "MaxSlots": 8,				//最大在线人数
+  "ReservedSlots": 20,	//为管理员预留的席位
+  "ServerName": "",			//服务器名字
+  "UseServerName": false,		//是否使用服务器名字，启动后地图的名字会改成servername
+  "LogPath": "tshock",			//日志存放路径，脚本运行的根目录
+  "DebugLogs": true,				//显示调试日志，建议关闭：false！！！
+  "DisableLoginBeforeJoin": false,
+  "IgnoreChestStacksOnLoad": false,	//载入时忽略宝箱堆叠，建议：false
+  "AutoSave": true,
+  "AnnounceSave": true,					//是否显示备份通知，建议：false！！！
+  "ShowBackupAutosaveMessages": true,
+  "BackupInterval": 0,
+  "BackupKeepFor": 60,
+  "SaveWorldOnCrash": true,
+  "SaveWorldOnLastPlayerExit": true,
+  "InvasionMultiplier": 1,
+  "DefaultMaximumSpawns": 5,
+  "DefaultSpawnRate": 600,
+  "InfiniteInvasion": false,
+  "PvPMode": "normal",			//pvp模式，"normal", "always"，"disabled".
+  "SpawnProtection": true,
+  "SpawnProtectionRadius": 10,
+  "RangeChecks": true,
+  "HardcoreOnly": false,
+  "MediumcoreOnly": false,
+  "DisableBuild": false,
+  "DisableHardmode": false,
+  "DisableDungeonGuardian": false,
+  "DisableClownBombs": false,
+  "DisableSnowBalls": false,
+  "DisableTombstones": true,		//是否禁用墓碑生成
+  "ForceTime": "normal",
+  "DisableInvisPvP": false,
+  "MaxRangeForDisabled": 10,
+  "RegionProtectChests": false,
+  "RegionProtectGemLocks": true,
+  "IgnoreProjUpdate": false,
+  "IgnoreProjKill": false,
+  "AllowCutTilesAndBreakables": false,
+  "AllowIce": false,
+  "AllowCrimsonCreep": true,
+  "AllowCorruptionCreep": true,
+  "AllowHallowCreep": true,
+  "StatueSpawn200": 3,
+  "StatueSpawn600": 6,
+  "StatueSpawnWorld": 10,
+  "PreventBannedItemSpawn": false,
+  "PreventDeadModification": true,
+  "PreventInvalidPlaceStyle": true,
+  "ForceXmas": false,
+  "ForceHalloween": false,
+  "AllowAllowedGroupsToSpawnBannedItems": false,
+  "RespawnSeconds": 5,						//重生秒数，原版默认是15秒
+  "RespawnBossSeconds": 10,				//BOSS重生秒数，原版默认是30秒
+  "AnonymousBossInvasions": true,
+  "MaxHP": 500,
+  "MaxMP": 200,
+  "BombExplosionRadius": 5,
+  "DefaultRegistrationGroupName": "default",
+  "DefaultGuestGroupName": "guest",
+  "RememberLeavePos": false,		//重进游戏，返回上次离开的位置
+  "MaximumLoginAttempts": 3,
+  "KickOnMediumcoreDeath": false,
+  "MediumcoreKickReason": "Death results in a kick",
+  "BanOnMediumcoreDeath": false,
+  "MediumcoreBanReason": "Death results in a ban",
+  "EnableWhitelist": false,
+  "WhitelistKickReason": "You are not on the whitelist.",
+  "ServerFullReason": "Server is full",
+  "ServerFullNoReservedReason": "Server is full. No reserved slots open.",
+  "KickOnHardcoreDeath": false,
+  "HardcoreKickReason": "Death results in a kick",
+  "BanOnHardcoreDeath": false,
+  "HardcoreBanReason": "Death results in a ban",
+  "EnableIPBans": true,
+  "EnableUUIDBans": true,
+  "EnableBanOnUsernames": false,
+  "KickProxyUsers": true,
+  "RequireLogin": false,			//强制注册登录,建议改为 true
+  "AllowLoginAnyUsername": true,
+  "AllowRegisterAnyUsername": false,
+  "MinimumPasswordLength": 4,
+  "HashAlgorithm": "sha512",
+  "BCryptWorkFactor": 7,
+  "DisableUUIDLogin": false,
+  "KickEmptyUUID": false,
+  "TilePaintThreshold": 15,
+  "KickOnTilePaintThresholdBroken": false,
+  "MaxDamage": 1175,
+  "MaxProjDamage": 1175,
+  "KickOnDamageThresholdBroken": false,
+  "TileKillThreshold": 60,
+  "KickOnTileKillThresholdBroken": false,
+  "TilePlaceThreshold": 32,
+  "KickOnTilePlaceThresholdBroken": false,
+  "TileLiquidThreshold": 50,
+  "KickOnTileLiquidThresholdBroken": false,
+  "ProjIgnoreShrapnel": true,
+  "ProjectileThreshold": 50,
+  "KickOnProjectileThresholdBroken": false,
+  "HealOtherThreshold": 50,
+  "KickOnHealOtherThresholdBroken": false,
+  "CommandSpecifier": "/",
+  "CommandSilentSpecifier": ".",
+  "DisableSpewLogs": true,
+  "DisableSecondUpdateLogs": false,
+  "SuperAdminChatRGB": [
+    255,
+    255,
+    255
+  ],
+  "SuperAdminChatPrefix": "(Super Admin) ",
+  "SuperAdminChatSuffix": "",
+  "EnableGeoIP": false,
+  "DisplayIPToAdmins": false,
+  "ChatFormat": "{1}{2}{3}: {4}",
+  "ChatAboveHeadsFormat": "{2}",
+  "EnableChatAboveHeads": false,		//开启头顶聊天,建议改成true
+  "BroadcastRGB": [
+    127,
+    255,
+    212
+  ],
+  "StorageType": "sqlite",
+  "SqliteDBPath": "tshock.sqlite",
+  "MySqlHost": "localhost:3306",
+  "MySqlDbName": "",
+  "MySqlUsername": "",
+  "MySqlPassword": "",
+  "UseSqlLogs": false,
+  "RevertToTextLogsOnSqlFailures": 10,
+  "RestApiEnabled": false,
+  "RestApiPort": 7878,
+  "LogRest": false,
+  "EnableTokenEndpointAuthentication": false,
+  "RESTMaximumRequestsPerInterval": 5,
+  "RESTRequestBucketDecreaseIntervalMinutes": 1,
+  "ApplicationRestTokens": {}
+}
+```
+
+sscconfig.json，ssc是 Server Side Characters的缩写，大致的意思是：服务器端角色。
+
+大家经常讲的“强制开荒”，指的就是这个，开启后功能后，进入服务器时每个玩家的数据会被设置成默认样子，比如默认是100血，20魔力，背包只有铜短剑、铜镐和铜镐，大家都是从0开始开荒，由于数据都保存在服务器，玩家没法带物品进来。血量和物品这些都支持设置。
+
+```json
+{
+  "Enabled": false,							//是否启用
+  "ServerSideCharacterSave": 5,	//表示保存间隔，以分钟为单位。 这意味着服务器将为每个玩家的角色创建备份，并每5分钟保存一次
+  "LogonDiscardThreshold": 250,	//登录后禁止丢弃物品的时间
+  "StartingHealth": 100,				//初始生命值
+  "StartingMana": 20,						//初始魔力值
+  "StartingInventory": [				//初始背包
+    {
+      "netID": -15,							//铜短剑，物品id见：https://terraria-zh.gamepedia.com/Item_IDs
+      "prefix": 0,							//物品词缀
+      "stack": 1								//物品数量
+    },
+    {
+      "netID": -13,
+      "prefix": 0,
+      "stack": 1
+    },
+    {
+      "netID": -16,
+      "prefix": 0,
+      "stack": 1
+    }
+  ]
+}
+```
+
+另外，服主（超管，superAdmin）会跳过SSC备份，即无法使用SSC，此时设置一个用户组，例如GM（GameManager），以下这些权限须在服务器控制台执行。
+
+```bash
+# 添加GM用户组，分配除忽略SSC权限以外的全部权限
+/group add GM * !tshock.ignore.ssc
+
+# 为服主注册账号，并设置GM权限，hf为服主名，1234为密码
+/user add hf 1234 GM
+
+# 如果服主已注册账号，可以直接分配到GM组
+# GM组下面可以设置多个用户
+/user group hf GM
+```
+
+![[server-config-04.webp]]
+
+*控制台 执行截图*
+
+**tshock.sqlite**，数据库文件，用户注册 以及 权限设置 都保存在这，此文件很重要。此文件可以用 **DBeaver** 打开，当然linux上面可以用sqlite3命令来查看。
+
+DBeaver是免费软件下载地址：https://dbeaver.io/download
+
+启动DBeaver后，点击创建新连接，并选择 tshock.sqlite 文件，以查看数据库。
+
+![[server-config-05.webp]]
+
+其中 **GroupList**、**Users**、**tsCharacter** 表，是腐竹需要熟悉的的。
+
+![[server-config-06.webp]]
+
+**GroupList**，Commands字段，记录了各用户组的权限，例如 GM拥有“两个”权限，“**\***”和“**!tshock.ignore.ssc**”，“**\***”代表服务器的全部权限，“**!tshock.ignore.ssc**”意思是不要 忽略ssc功能。Parent字段表示父组，例如default组的parent是guest，意味着default继承了guest组的全部权限。ChatColor、Prefix和Suffix是聊天文字相关，分别是聊天文字的颜色、前缀和后缀。
+
+默认情况下用户注册后会被分到“default”组。
+
+![[server-config-07.webp]]
+
+**Users**，用户表，记录着用户ID、名字、密码、所在用户组、注册时间、最后登录时间 和 已知IP，密码经过hash处理，怎么查看我也不知道，要是有哪位大佬知道，还请帮忙指教/抱拳。
+
+![[server-config-08.webp]]
+
+**tsCharacter**，tshock玩家数据表，详细的解释请移驾这篇文章
+
+> 参考：[Bilibili 专栏 cv10088388](https://www.bilibili.com/read/cv10088388/)
+
+## 个人快速开服配置
+
+**config.json**
+
+```bash
+"RequireLogin": true,
+
+"DebugLogs": false,
+"AnnounceSave": false,
+"DisableTombstones": true,
+"EnableChatAboveHeads": true,
+```
+
+**ssconfig.json**
+
+```bash
+"Enabled": true
+```
+
+**设置权限**（控制台上执行）
+
+```bash
+# 第1部分
+/group addperm default tshock.warp tshock.whisper tshock.account.changepassword tshock.account.logout tshock.world.paint tshock.world.editspawn tshock.world.modify
+
+# 第2部分
+/group addperm default tshock.world.movenpc tshock.world.toggleparty tshock.world.time.usesundial tshock.npc.summonboss tshock.npc.startinvasion tshock.npc.startdd2 tshock.npc.spawnpets tshock.npc.hurttown
+
+# 第3部分
+/group addperm default tshock.tp.rod tshock.tp.wormhole tshock.tp.pylon tshock.tp.tppotion tshock.tp.magicconch tshock.tp.demonconch
+
+# 第4部分
+/group addperm default tshock.ignore.removetile tshock.ignore.liquid tshock.ignore.noclip tshock.ignore.paint tshock.ignore.placetile tshock.ignore.projectile tshock.ignore.damage
+
+# 第5部分
+/group addperm default tshock.ignore.sendtilesquare
+
+# 添加GM用户组
+/group add GM * !tshock.ignore.ssc
+```
+
+配置好后就可以开服了。
+
+## 部分权限解释
+
+```bash
+tshock.account.changepassword       // 更改密码
+tshock.account.logout             // 登出
+tshock.whisper                  // 玩家私信
+
+tshock.tp.rod                  // 混沌传送法杖
+tshock.tp.wormhole              // 虫洞药水
+tshock.tp.pylon                // 传送晶塔
+tshock.tp.tppotion             // 传送药水
+tshock.tp.magicconch           // 魔法海螺
+tshock.tp.demonconch           // 恶魔海螺
+
+tshock.world.toggleparty        // 开派对
+tshock.world.time.usesundial     // 使用日冕
+tshock.world.modify           // 挖掘砍树建造
+tshock.world.paint				// 使用油漆
+tshock.world.editspawn			// 设置全图玩家的出生点
+tshock.world.movenpc			// 移动NPC
+tshock.npc.hurttown				// 伤害NPC
+tshock.npc.summonboss			// 召唤boss
+tshock.npc.startinvasion		// 召唤入侵
+tshock.npc.startdd2				// 天国事件
+tshock.npc.spawnpets			// 生成城镇宠物
+
+tshock.ignore.removetile      // 忽略 乱挖砖块(使用炸弹等) 检测
+tshock.ignore.liquid         // 忽略 液体 检测
+tshock.ignore.noclip         // 忽略 穿墙 检测
+tshock.ignore.paint				// 忽略 油漆 检测
+tshock.ignore.placetile       // 忽略 替换方块 检测
+tshock.ignore.projectile       // 忽略 射弹 检测
+tshock.ignore.damage          // 忽略 高伤害 检测
+tshock.ignore.sendtilesquare	// 忽略 修改地图限制（允许用锤子敲飞镖机关）
+```
+
+移除权限
+
+```bash
+# 不允许注册
+/group delperm guest tshock.account.register
+```
+
+这里推荐我写的插件，安装后 输入 /fd init 指令可以快速完成，我个人的这部分配置。
+
+> 参考：[Bilibili 专栏 cv15714973](https://www.bilibili.com/read/cv15714973/)
+
+为了让大家更快上手，我准备快速开服模板，里面有Windows和Linux一键开服脚本 ;-)
+
+链接：https://pan.baidu.com/s/1araJEfcywxSRWtrcFhcnCQ 
+
+提取码：7777

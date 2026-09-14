@@ -1,0 +1,121 @@
+---
+title: "TShock指令：/worldevent（世界事件）"
+tags: [泰拉瑞亚, terraria, tshock]
+order: 151
+source: https://www.bilibili.com/read/cv10986720/
+sourceDate: 2021-04-22
+draft: false
+---
+
+# TShock指令：/worldevent（世界事件）
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv10986720/) · 2021-04-22
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+worldevent 指令可以处理陨石、沙尘暴、下雨、血月、日食 和 入侵事件。
+
+指令速览
+
+![[cmd-worldevent-01.webp]]
+
+指令文本
+
+```bash
+# 查询指令用法
+/worldevent
+
+# 陨石
+/worldevent meteor
+
+# 满月
+/worldevent fullmoon
+
+# 血月 开关
+/worldevent bloodmoon
+
+# 日食 开关
+/worldevent eclipse
+
+# 沙尘暴 开关
+/worldevent sandstorm
+
+# 下雨 开关
+/worldevent rain
+
+# 史莱姆雨 开关
+/worldevent rain slime
+
+# 哥布林军队 开关
+/worldevent invasion goblins
+
+# 雪人军团 开关
+/worldevent invasion snowmen
+
+# 海盗入侵 开关
+/worldevent invasion pirates
+
+# 南瓜月 开关
+/worldevent invasion pumpkinmoon
+
+# 霜月 开关
+/worldevent invasion frostmoon
+
+# 火星暴乱 开关
+/worldevent invasion martians
+```
+
+所需权限
+
+若非管理员，需分配权限
+
+```bash
+tshock.world.events
+tshock.world.events.meteor
+tshock.world.events.fullmoon
+tshock.world.events.bloodmoon
+tshock.world.events.eclipse
+tshock.world.events.sandstorm
+tshock.world.events.rain
+tshock.world.events.invasion
+
+# 示例 给默认用户组添加 worldevent 执行权限
+/group addperm default tshock.world.events
+```
+
+查询指令
+
+输入 "/worldevent" 可以查询全部的可用指令，不用去背这些指令：
+
+```bash
+语法无效! 正确语法:  /worldevent <事件类型>可用类型: meteor（陨石）, fullmoon（满月）, bloodmoon（血月）, eclipse（日食）, invasion（入侵）, sandstorm（沙尘暴）, rain（雨）
+
+有效的入侵类型: goblins（哥布林军队）, snowmen（雪人军团）, pirates（海盗入侵）, pumpkinmoon（南瓜月）, frostmoon（霜月）, martians（火星暴乱）
+```
+
+在游戏里执行，大概是这样子的：
+
+![[cmd-worldevent-02.webp]]
+
+关于陨石
+
+有陨石生成时，会提示 “陨石已落地！
+
+如果已经有一定数量的陨石物块处于0 英尺高度以上，陨石就不会坠落。
+
+![[cmd-worldevent-03.webp]]
+
+## 灯笼夜
+
+TShock v4.5.13版本开始支持开启灯笼夜，实测发现目前白天也能开启灯笼夜，灯笼的个数比正常的要少一些。
+
+```js
+/worldevent lanternsnight
+/worldevent lanterns
+```
+
+对应的权限：
+
+```js
+tshock.world.events.lanternsnight
+```

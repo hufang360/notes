@@ -39,17 +39,31 @@ pnpm check            # 提交前自查：密钥扫描 + 隐私目录检查
 │   │   └── theme/                 自定义样式和 Mermaid 组件
 │   ├── index.md                   首页
 │   ├── about.md                   关于页
-│   ├── software/  games/  ops/    三个分类
+│   │
+│   ├── software/                  分类：软件
+│   │   ├── ai-tools/  design/     子分组（每个子目录一个 index.md）
+│   │   └── git-cheatsheet.md …    直接放在分类下的单篇
+│   │
+│   ├── games/                     分类：游戏
+│   │   ├── terraria/              └─ tshock/ plugins/ client/ resource-pack/ tmodloader/
+│   │   ├── dst/  starbound/  minecraft/
+│   │
+│   ├── ops/                       分类：运维
+│   ├── essay/                     分类：随笔
 │   └── public/
 │       ├── favicon.svg
-│       └── assets/                ← 所有图片都放这里
+│       └── assets/                ← 所有图片都放这里（按分类分目录）
+│
 ├── private/                       ← 私密内容，永远不会被提交（见下文）
 ├── _templates/note.md             新笔记模板
-├── scripts/                       辅助脚本（新建笔记、自查、装钩子）
+├── scripts/                       辅助脚本（新建笔记、导入 B 站专栏、自查）
 ├── hooks/pre-commit               git 提交钩子
 ├── .github/workflows/deploy.yml   自动部署
 └── .gitleaks.toml                 密钥扫描规则
 ```
+
+**目录就是导航**：`docs/<分类>/` 一个目录就是一个分组，目录里的 `index.md` 提供分组标题和总览页，
+`order` 决定排序。侧边栏、分组、导航全部自动生成，不用手写。
 
 ---
 

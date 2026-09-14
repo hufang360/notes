@@ -235,6 +235,103 @@ function escapeHtml(s) {
 const FIGURE_RE = /<figure([^>]*)>([\s\S]*?)<\/figure>/gi
 
 /**
+ * B 站的「动态」类型内容不是 HTML，而是 Quill Delta（`{"ops":[...]}`）。
+ * 这里转成等价 HTML，后面的图片下载和 turndown 流程原样复用。
+ * 不是 Delta 就返回 null，让调用方用原内容。
+ */
+function deltaToHtml(content) {
+  if (!content || content[0] !== '{') return null
+  let doc
+  try {
+    doc = JSON.parse(content)
+  } catch {
+    return null
+  }
+  if (!Array.isArray(doc?.ops)) return null
+
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const out = []
+  let runs = []
+  let codeBuf = null
+  let listBuf = null
+  let listType = null
+
+  const runHtml = (text, a = {}) => {
+    let s = esc(text)
+    if (a.code) s = `<code>${s}</code>`
+    if (a.bold) s = `<strong>${s}</strong>`
+    if (a.italic) s = `<em>${s}</em>`
+    if (a.strike) s = `<s>${s}</s>`
+    if (a.underline) s = `<u>${s}</u>`
+    if (a.link) s = `<a href="${a.link}">${s}</a>`
+    return s
+  }
+
+  const closeCode = () => {
+    if (codeBuf === null) return
+    out.push(`<pre><code>${esc(codeBuf.join('\n'))}</code></pre>`)
+    codeBuf = null
+  }
+  const closeList = () => {
+    if (listBuf === null) return
+    const tag = listType === 'ordered' ? 'ol' : 'ul'
+    out.push(`<${tag}>${listBuf.map((t) => `<li><p>${t}</p></li>`).join('')}</${tag}>`)
+    listBuf = null
+    listType = null
+  }
+
+  const flushLine = (attrs = {}) => {
+    const html = runs.map((r) => r.html).join('').trim()
+    const plain = runs.map((r) => r.text).join('').trim()
+    runs = []
+
+    if (attrs['code-block']) {
+      closeList()
+      if (codeBuf === null) codeBuf = []
+      codeBuf.push(plain)
+      return
+    }
+    closeCode()
+
+    if (attrs.list) {
+      if (listBuf === null) listBuf = []
+      listBuf.push(html)
+      listType = attrs.list
+      return
+    }
+    closeList()
+
+    if (!html) return
+    // 标题下沉一级，页面顶部由我们自己的 # 标题占位
+    const level = Math.min(Number(attrs.header) + 1 || 0, 6)
+    if (level) out.push(`<h${level}>${html}</h${level}>`)
+    else if (attrs.blockquote) out.push(`<blockquote><p>${html}</p></blockquote>`)
+    else out.push(`<p>${html}</p>`)
+  }
+
+  for (const op of doc.ops) {
+    const ins = op.insert
+    if (typeof ins === 'string') {
+      const parts = ins.split('\n')
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i]) runs.push({ html: runHtml(parts[i], op.attributes), text: parts[i] })
+        if (i < parts.length - 1) flushLine(op.attributes ?? {})
+      }
+    } else if (ins && typeof ins === 'object') {
+      if (ins['native-image']?.url) {
+        runs.push({ html: `<img src="${ins['native-image'].url}">`, text: '' })
+      }
+      // cut-off 是 B 站结尾的装饰图，丢掉
+    }
+  }
+  flushLine({})
+  closeCode()
+  closeList()
+
+  return out.join('\n')
+}
+
+/**
  * 把 B 站的代码块从「属性」搬回「文本」。
  *
  * B 站存代码的方式是 <figure class="code-box"><pre codecontent="真实代码"><code></code></pre></figure>，
@@ -431,7 +528,8 @@ async function importOne(spec, opts) {
   console.log(`   ${data.stats.view} 阅读 · ${fmtDate(data.publish_time)} · ${data.words} 字`)
 
   /* --- 1. 下载图片 --- */
-  const found = collectImages(data.content)
+  const html = deltaToHtml(data.content) ?? data.content
+  const found = collectImages(html)
   const imageMap = new Map()
   const assetDir = path.join(PUBLIC, 'assets', opts.section, subDir)
   const webpTool = opts.webp ? await detectImageTool() : null
@@ -471,7 +569,7 @@ async function importOne(spec, opts) {
 
   /* --- 2. 转 Markdown --- */
   const td = makeTurndown(imageMap)
-  const body = tidy(td.turndown(inlineCodeBlocks(data.content)))
+  const body = tidy(td.turndown(inlineCodeBlocks(html)))
 
   /* --- 3. 组装 --- */
   const tags = [...new Set([...(data.tags ?? []).map((t) => t.name), ...opts.tags])].slice(0, 6)
@@ -547,7 +645,7 @@ async function main() {
   console.log('接着跑一下：pnpm status && pnpm build')
 }
 
-export { makeTurndown, tidy, collectImages, mapLang, decodeEntities, parseSpec, inlineCodeBlocks }
+export { makeTurndown, tidy, collectImages, mapLang, decodeEntities, parseSpec, inlineCodeBlocks, deltaToHtml }
 
 const isEntry = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href
 if (isEntry) {

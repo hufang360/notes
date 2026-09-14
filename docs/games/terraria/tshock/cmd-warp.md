@@ -1,0 +1,101 @@
+---
+title: "TShock指令：/warp（传送点）"
+tags: [泰拉瑞亚, terraria, tshock]
+order: 131
+source: https://www.bilibili.com/read/cv15693426/
+sourceDate: 2022-03-17
+draft: false
+---
+
+# TShock指令：/warp（传送点）
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv15693426/) · 2022-03-17
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+## 指令速览
+
+翠花先上酸菜：
+
+```bash
+# 这2个指令，普通玩家就能够执行（权限为：tshock.warp）
+/warp list，显示可用的传送点名称
+/warp <传送点名称>，将自己传送到对应的传送点
+
+# 这4个指令，需要服主才能执行（权限为：tshock.admin.warp）
+/warp add <传送点名称>，添加传送点
+/warp del <传送点名称>，删除传送点
+/warp hide <传送点名称> <true/false>，是否隐藏该传送点
+/warp send <玩家名称> <传送点名称>，将单个玩家传送点到指定的传送点
+```
+
+## 基本用法
+
+说一个实际场景，例如 服主到达蜂王场地后，执行这条指令：
+
+```bash
+/warp add 蜂王场地
+```
+
+此时任意玩家输入这个指令就能传送到你的位置： 
+
+```bash
+/warp 蜂王场地
+```
+
+当然输入中文是很方便阅读理解的，但是不好输入，所以建议使用拼音代替，例如
+
+```bash
+/warp add fengwang
+/warp add fengwangchangdi
+```
+
+## 隐藏传送点（hide）
+
+隐藏后执行 /warp list 就看不到这个传送点，即使你是服主你也看不到，当然只要任意玩家输对了传送点名称，还是能传送的。
+
+```bash
+/warp hide fengwang true
+```
+
+## 传送玩家（send）
+
+/warp send 指令是将一个玩家传送到指定传送点，初次看到容易理解成是将某个传送点单独私发给一个玩家，例如将 名为 tg 的玩家 传送到 fengwang 这个传送点。
+
+```bash
+/warp send tg fengwang
+```
+
+经测试，用数字代替玩家名也是可行的，例如：
+
+```bash
+/who
+# Online Players (2/8)
+# hf, tg
+
+/warp send 1 fengwang
+```
+
+## 传送点保存在哪？
+
+传送点保存在 tshock.sqlite 文件中，通过 sqlite 数据库查看软件进行查看，记录保存在 Warps 表中，执行 /warp hide 的传送点 Private的值为1
+
+![[cmd-warp-01.webp]]
+
+## 如何用好这个指令
+
+1、默认情况下 普通用户都能使用 /warp 指令，服主如果不增加传送点，指令就没有功能，由于可以在任意位置添加传送点，为了不然大家因为随意传送而对游戏失去乐趣，可以适当开放1、2个传送点给大家用。
+
+2、不想给普通用户使用 /warp 指令，可以执行这条指令，移除默认用户使用指令的权限：
+
+```bash
+/group delperm default tshock.warp
+```
+
+当然你还是可以通过 /warp send 指令来传送普通玩家。
+
+3、如果是服主喊大家集合打boss，则可以使用
+
+```bash
+/tphere *
+```

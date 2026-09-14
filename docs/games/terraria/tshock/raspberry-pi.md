@@ -1,0 +1,126 @@
+---
+title: "在树莓派上运行TShock5.0"
+tags: [tshock]
+order: 71
+source: https://www.bilibili.com/read/cv21284037/
+sourceDate: 2023-01-18
+draft: false
+---
+
+# 在树莓派上运行TShock5.0
+
+> [!NOTE] 本文原载于 Bilibili 专栏
+> [阅读原文](https://www.bilibili.com/read/cv21284037/) · 2023-01-18
+> 成文较早，文中的版本号和命令可能已经过时，请结合实际情况判断。
+
+有人问树莓派怎么运行TShock5.0，我手头有张3b+，只有1G内存，内存太小不适合用来开服，但是可以给大家测试一下，其实linux的安装方法大致差不多，有些linux经验的看了本文，估计也能触类旁通。
+
+要运行TShock5.0，先得装.net6.0，可能是因为我的3b+太老，用“apt search dotnet-runtime”并没有搜索结果，但是.net6.0可以手动安装，就是你把文件解压到一个地方，然后把这个地方写进环境变量里面，然后TShock就能识别到.net6.0。
+
+## 下载解压.net6.0
+
+```bash
+# 切换工作目录到用户目录下
+cd ~
+
+# 创建名为“dotnet”的文件夹
+mkdir dotnet
+
+# 切换工作目录到刚才创建的文件夹下
+cd dotnet
+
+# 下载并解压.net6.0
+# 因为我的3b+是32位的，所以选“linux-arm”
+wget https://dotnetcli.azureedge.net/dotnet/Runtime/6.0.12/dotnet-runtime-6.0.12-linux-arm.tar.gz
+tar -xvf dotnet-runtime-6.0.12-linux-arm.tar.gz
+
+# 如果你的是64位的，请用“linx-arm64”，就是执行下面这两行
+wget https://dotnetcli.azureedge.net/dotnet/Runtime/6.0.12/dotnet-runtime-6.0.12-linux-arm64.tar.gz
+tar -xvf dotnet-runtime-6.0.12-linux-arm64.tar.gz
+```
+
+## 设置环境变量
+
+创建.bashrc，一般来说这个文件早已经存在了
+
+```bash
+# 切换工作目录到用户目录下
+cd ~
+
+# 如果.bashrc不存在就创建
+# 如果已存在就什么都不做
+touch .bashrc
+
+# 用vi编辑 .bashrc 文件
+vi .bashrc
+
+# 此时能看到.bashrc文件的内容
+# 按键盘的下键（上下左右四个方向键）切换到最后一行
+# 输入字母i，进入插入模式，然后输入/粘贴下面这两行
+export DOTNET_ROOT=~/dotnet
+export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+
+# 输入/粘贴完成后，按下ESC键
+# 输入“:wq”（不含引号）然后敲Enter键，保存并退出编辑
+
+# 刷新环境变量配置文件
+source .bashrc
+```
+
+为验证上述操作是否正确，输入指令“**dotnet --info**”,能看到版本号以及安装路径说明操作成功。
+
+![[raspberry-pi-01.webp]]
+
+## 下载解压启动TShock
+
+```bash
+# 切换工作目录到用户目录下
+cd ~
+
+# 创建目录“1449”，把相关文件都放这个文件夹下
+mkdir 1449
+
+# 切换工作目录
+cd 1449
+
+# 下载TShock（arm架构）
+wget https://github.com/Pryaxis/TShock/releases/download/v5.1.3/TShock-5.1.3-for-Terraria-1.4.4.9-linux-arm-Release.zip
+
+# 下载TShock（arm64架构）
+wget https://github.com/Pryaxis/TShock/releases/download/v5.1.3/TShock-5.1.3-for-Terraria-1.4.4.9-linux-arm64-Release.zip
+
+# 解压有两层，tshock做了两层压缩，先压缩成tar，在把tar压缩成zip
+# tar可以保留TShock.Server的可以执行属性，因此从tar里面解压出来的TShock.Server，不需要执行 `chmod +x ./TShock.Server`
+# 第一层解压（.zip）
+unzip TShock-5.1.3-for-Terraria-1.4.4.9-linux-arm-Release.zip -d ./
+# 第二层解压（.tar）
+tar -xvf TShock-Beta-linux-arm-Release.tar
+
+# 启动TShock
+./TShock.Server
+```
+
+启动成功后，大致如下图
+
+![[raspberry-pi-02.webp]]
+
+开启tshock/泰拉的中文语言
+
+```bash
+# 开启tshock/泰拉的中文语言
+./TShock.Server -lang 7
+```
+
+![[raspberry-pi-03.webp]]
+
+## 相关文章
+
+> 参考：[Bilibili 专栏 cv9479081](https://www.bilibili.com/read/cv9479081/)
+
+> 参考：[Bilibili 专栏 cv20692064](https://www.bilibili.com/read/cv20692064/)
+
+> 参考：[Bilibili 专栏 cv10687110](https://www.bilibili.com/read/cv10687110/)
+
+## 最后
+
+由于手头的pi太老，没法做兼容性和稳定性测试，在用pi开服前，最好做些测试！

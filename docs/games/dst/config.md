@@ -182,7 +182,7 @@ run_shared+=(-persistent_storage_root "$doc_dir" )
 ```
 
 这里的S1，对应了前面的操作，如果你有多个世界，可以改成 S2、S3这种，同时对应地，修改此脚本。
-
+****
 **updateDST.sh**（更新脚本)：
 
 ```bash
