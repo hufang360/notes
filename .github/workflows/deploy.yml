@@ -18,19 +18,34 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------- #
-  # 1. 密钥扫描：历史里翻出任何疑似凭据就整体失败
+  # 1. 密钥扫描：全历史扫，任何疑似凭据就整体失败
   # ---------------------------------------------------------------- #
   secret-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # gitleaks 要扫完整历史
-      - name: gitleaks
-        uses: gitleaks/gitleaks-action@v3
+          fetch-depth: 0 # 要扫完整历史，浅克隆不行
+
+      # 不用 gitleaks-action：它不认 -c，只能用默认规则，
+      # 结果就是 .gitleaks.toml 里的白名单不生效（或者反过来，整份配置白写）。
+      # 直接装官方二进制，把配置文件显式传进去。
+      - name: 安装 gitleaks
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version=$(gh release view --repo gitleaks/gitleaks --json tagName --jq .tagName)
+          gh release download "$version" --repo gitleaks/gitleaks \
+            --pattern '*_linux_x64.tar.gz' --output - | tar -xz gitleaks
+          sudo install -m 755 gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: 扫描
+        run: |
+          set -euo pipefail
+          # --redact：命中时只打码上报，不把密钥本身打进日志
+          gitleaks git --no-banner --redact --config .gitleaks.toml --exit-code 1 .
 
   # ---------------------------------------------------------------- #
   # 2. 构建静态站

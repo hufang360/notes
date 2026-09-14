@@ -55,28 +55,44 @@ if (fs.existsSync(path.join(ROOT, 'private'))) {
   else ok('private/ 当前为空')
 }
 
-/* ---- 3. gitleaks 全量扫描 ---- */
-console.log('\n3. gitleaks 扫描')
+/* ---- 3. gitleaks：已提交的历史 ---- */
+console.log('\n3. gitleaks 扫描 git 历史')
+let hasGitleaks = true
 try {
   execSync('gitleaks version', { stdio: 'ignore' })
 } catch {
+  hasGitleaks = false
   console.log('  ⚠️  未安装 gitleaks，跳过。安装：brew install gitleaks')
-  process.exit(failed ? 1 : 0)
 }
 
-try {
-  execFileSync('gitleaks', ['git', '--no-banner', '--redact', '--exit-code', '1', '--log-level', 'warn', '.'], {
-    stdio: 'inherit',
-  })
-  ok('没有发现密钥')
-} catch {
-  bad('gitleaks 报了问题，请查看上面的输出')
-  console.log('     误报可以在该行加注释： # gitleaks:allow')
-  console.log('     也可以把路径加进 .gitleaks.toml 的 allowlists')
+if (hasGitleaks) {
+  const cfg = ['--config', '.gitleaks.toml']
+  try {
+    execFileSync('gitleaks', ['git', '--no-banner', '--redact', ...cfg, '--exit-code', '1', '--log-level', 'warn', '.'], {
+      stdio: 'inherit',
+    })
+    ok('历史里没有发现密钥')
+  } catch {
+    bad('gitleaks 在 git 历史里报了问题，请查看上面的输出')
+    console.log('     误报确实排除后，把那个具体的假值加进 .gitleaks.toml 的 allowlists')
+    console.log('     ⚠️  不要加 docs/ 这类路径白名单，否则整个笔记目录就不再被扫描了')
+  }
+
+  /* ---- 4. gitleaks：工作区（还没提交的东西）---- */
+  // 只看 git 历史是不够的 —— 密钥刚写进笔记、还没 commit 的时候也得拦下来
+  console.log('\n4. gitleaks 扫描工作区（含未提交改动）')
+  try {
+    execFileSync('gitleaks', ['dir', '--no-banner', '--redact', ...cfg, '--exit-code', '1', '--log-level', 'warn', '.'], {
+      stdio: 'inherit',
+    })
+    ok('工作区里没有发现密钥')
+  } catch {
+    bad('gitleaks 在工作区里报了问题，请查看上面的输出')
+  }
 }
 
-/* ---- 4. 敏感文件扩展名扫描 ---- */
-console.log('\n4. 敏感文件扩展名')
+/* ---- 5. 敏感文件扩展名扫描 ---- */
+console.log('\n5. 敏感文件扩展名')
 // 只看「像凭据」的文件名。注意别把本项目自己的脚本扫进来。
 const RISKY = [
   /\.(key|pem|p12|pfx|jks|keystore|env)$/i,

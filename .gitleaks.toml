@@ -1,32 +1,47 @@
 # gitleaks 配置
-# 在 hooks/pre-commit 和 pnpm check 中使用
+# 在 hooks/pre-commit、pnpm check 和 CI 里使用
 # 语法参考：https://github.com/gitleaks/gitleaks#configuration
 
 title = "notes 仓库密钥扫描规则"
 
 [extend]
-# 继承 gitleaks 内置的全部规则（800+ 条：AWS / GitHub / Slack / 私钥 / 各类 token）
+# 继承 gitleaks 内置的全部规则（1000+ 条：AWS / GitHub / Slack / 私钥 / 各类 token）
 useDefault = true
 
-# 允许清单：示例代码、文档里的假密钥不该报错
+# --------------------------------------------------------------------------- #
+# 关于白名单的一条铁律：
+#
+# **不要加 `docs/.*\.md$` 这类路径白名单。**
+#
+# 这个仓库的正文本来就是笔记，把 docs/ 排除掉等于让扫描形同虚设 ——
+# 真把服务器密码写进笔记，pnpm check 也会一路绿灯。
+# 白名单只用来放行「已经人工确认过是假值」的具体字符串。
+# 宁可误报，也不要漏报。
+# --------------------------------------------------------------------------- #
+
 [[allowlists]]
-description = "文档与示例里的占位符"
-paths = [
-  '''docs/.*\.md$''',
-  '''_templates/.*\.md$''',
-  '''private/README\.md$''',
-  '''scripts/.*\.mjs$''',
-  '''hooks/pre-commit$''',
-]
+description = "cv21314034 里作者明确标注为失效的 B 站直播配置示例"
 regexes = [
-  '''change-me''',
-  '''your[-_].*[-_]here''',
-  '''example\.com''',
-  '''example\.org''',
-  '''<.*>''',
-  '''xxx+''',
-  '''1234567890''',
+  '''TaPGcesj0aPoJpektLsyVzcuNAKKOU''',
+  '''B8HfOO6oJanyL7CzDnPfYg9h''',
 ]
 
-# 每一条允许清单只作用于下面这些规则之外（留空表示全部规则）
-# 如果你发现某条内置规则在本仓库误报太多，可以在这里单独加 rules 字段
+[[allowlists]]
+description = "cv11045619 里 TShock REST API 的示例 token（文档用，非真实环境）"
+regexes = [
+  '''1DB46B3C6509122169E7332C4AA7A54A3ECA64F07AF7017DCE84F038EC95B718''',
+]
+
+[[allowlists]]
+description = "通用的占位符写法，不是真值"
+regexes = [
+  '''change[-_]?me''',
+  '''your[-_][a-z0-9]*[-_](here|key|token|password|secret)''',
+  '''xxx+''',
+  '''\bfoo[-_]?bar\b''',
+  '''example\.(com|org|net)''',
+  '''127\.0\.0\.1''',
+  '''\{\{[a-zA-Z_]+\}\}''', # {{url}} / {{token}}，Postman 风格的变量
+  '''\$\{[A-Z_]+\}''', # ${API_KEY}
+  '''<[A-Z][A-Z_]{2,}>''', # <YOUR_TOKEN>
+]

@@ -38,6 +38,13 @@ Obsidian 笔记仓库 + VitePress 静态站，推 `main` 自动发到 GitHub Pag
   `scripts/status.mjs` 直接复用了 `vault.mts`。别"顺手"改扩展名。
 - **pnpm 11 的构建白名单**在 `pnpm-workspace.yaml`（`allowBuilds` + `onlyBuiltDependencies`），
   两个键都留着是为了兼容 pnpm 10。
+- **`.gitleaks.toml` 里禁止加 `docs/**.md` 这类路径白名单。**
+  这个仓库的正文就是笔记，排除 docs/ 等于让扫描形同虚设 —— 密码写进笔记也会绿灯。
+  白名单只能放人工确认过的具体假值。
+- **CI 不用 `gitleaks-action`。** 它不认 `--config`，用的是默认规则，
+  本地和 CI 的结果会对不上（这个坑已经踩过一次）。workflow 里直接下官方二进制。
+- **密钥扫描要扫两层**：`gitleaks git` 只看已提交的历史，刚写进笔记、还没 commit 的
+  得靠 `gitleaks dir`。两个都在 `pnpm check` 里。
 
 ## 命令
 
