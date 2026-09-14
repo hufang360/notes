@@ -1,7 +1,7 @@
 ---
 title: Starbound 服务端 Docker 化
 tags: [starbound, docker, 游戏, 开服]
-order: 20
+order: 22
 ---
 
 # Starbound 服务端 Docker 化
@@ -141,5 +141,5 @@ sudo ss -lunp | grep 21025
 
 ## 相关
 
-- [[terraria-tshock]]
+- [[terraria/tshock]]
 - [[docker-compose-tips]]

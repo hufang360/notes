@@ -1,7 +1,7 @@
 ---
 title: Terraria TShock 开服笔记
 tags: [terraria, tshock, 游戏, 开服]
-order: 10
+order: 31
 ---
 
 # Terraria TShock 开服笔记
@@ -162,5 +162,5 @@ find /backup/tshock -maxdepth 1 -type d -mtime +14 -exec rm -rf {} +
 
 ## 相关
 
-- [[starbound-docker]] —— 同样是开服，那个走了 Docker 路线
+- [[starbound/docker]] —— 同样是开服，那个走了 Docker 路线
 - [[nginx-reverse-proxy]]

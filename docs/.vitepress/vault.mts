@@ -240,25 +240,44 @@ function buildTree(notes: NoteMeta[], prefix: string): SidebarItem[] {
     }
   }
 
-  const sortNotes = (list: NoteMeta[]) =>
-    [...list].sort((a, b) => a.order - b.order || a.rel.localeCompare(b.rel, 'zh'))
+  // 笔记和子目录分组放在一起按 order 排序，而不是「笔记在前、分组在后」，
+  // 这样侧边栏的顺序完全由 frontmatter.order 决定。
+  // 分组的 order 取它自己 index.md 的 order。
+  interface Entry {
+    order: number
+    tie: string
+    item: SidebarItem
+  }
+  const entries: Entry[] = []
 
-  const items: SidebarItem[] = sortNotes(direct).map((n) => ({
-    text: n.title,
-    link: '/' + n.rel.replace(/\.md$/, ''),
-  }))
-
-  for (const [dir, list] of [...dirs.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-    const dirPrefix = prefix + dir + '/'
-    const indexNote = list.find((n) => n.rel === dirPrefix + 'index.md')
-    items.push({
-      text: indexNote ? indexNote.title : dir,
-      collapsed: false,
-      items: indexNote
-        ? [{ text: indexNote.title, link: '/' + dirPrefix.replace(/\/$/, '') }, ...buildTree(list, dirPrefix)]
-        : buildTree(list, dirPrefix),
+  for (const n of direct) {
+    entries.push({
+      order: n.order,
+      tie: n.rel,
+      item: { text: n.title, link: '/' + n.rel.replace(/\.md$/, '') },
     })
   }
 
-  return items
+  for (const [dir, list] of dirs) {
+    const dirPrefix = prefix + dir + '/'
+    const indexNote = list.find((n) => n.rel === dirPrefix + 'index.md')
+    const children = buildTree(list, dirPrefix)
+    if (!children.length) continue
+
+    // 有 index.md 时，把分组标题本身做成链接，而不是把 index 再当作第一项塞进
+    // children —— 那样分组的标题会和第一项重复一遍。
+    entries.push({
+      order: indexNote?.order ?? Number.MAX_SAFE_INTEGER,
+      tie: dirPrefix,
+      item: {
+        text: indexNote ? indexNote.title : dir,
+        link: indexNote ? '/' + dirPrefix.replace(/\/$/, '') : undefined,
+        collapsed: false,
+        items: children,
+      },
+    })
+  }
+
+  entries.sort((a, b) => a.order - b.order || a.tie.localeCompare(b.tie, 'zh'))
+  return entries.map((e) => e.item)
 }

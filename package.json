@@ -9,6 +9,7 @@
     "build": "vitepress build docs",
     "preview": "vitepress preview docs",
     "new": "node scripts/new-note.mjs",
+    "bili": "node scripts/import-bilibili.mjs",
     "check": "node scripts/check-secrets.mjs",
     "status": "node scripts/status.mjs",
     "prepare": "node scripts/install-hooks.mjs"
@@ -16,6 +17,7 @@
   "devDependencies": {
     "markdown-it-mathjax3": "^5.2.0",
     "mermaid": "^12.0.0",
+    "turndown": "^7.2.4",
     "vitepress": "^1.6.4"
   }
 }

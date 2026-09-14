@@ -75,9 +75,10 @@ export default defineConfig({
 
   vite: {
     build: {
-      // mermaid 自己就是一个 ~660KB 的 chunk，但它是**按需**加载的
-      // （只有带图表的页面才下载），不影响首屏。调高阈值免得每次构建都刷警告。
-      chunkSizeWarningLimit: 1200,
+      // mermaid 及其布局引擎（elk 等）是几个 600KB~1.4MB 的 chunk，
+      // 但都是**按需**加载的（只有带图表的页面才下载），不影响首屏。
+      // 调高阈值免得每次构建都刷警告。
+      chunkSizeWarningLimit: 1600,
     },
   },
 

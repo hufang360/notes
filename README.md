@@ -17,6 +17,7 @@ pnpm dev              # 本地预览 http://localhost:5173/notes/
 
 ```bash
 pnpm new "Nginx 限流配置" --section ops --slug nginx-rate-limit   # 新建笔记
+pnpm bili 14792889=dst/linux-server                             # 从 Bilibili 专栏导入
 pnpm build            # 构建到 docs/.vitepress/dist/
 pnpm preview          # 预览构建产物
 pnpm status           # 看看现在有多少篇笔记
@@ -216,6 +217,7 @@ git commit --no-verify
 | `vitepress` | 静态站生成 |
 | `markdown-it-mathjax3` | 数学公式 |
 | `mermaid` | 图表（**动态加载**，没图的页面不会下载） |
+| `turndown` | 只在导入 Bilibili 专栏时用到 |
 
 `gitleaks` 需要单独安装（不在 npm 里）：
 
@@ -225,6 +227,47 @@ brew install gitleaks     # macOS
 ```
 
 没装也不会报错，只是跳过密钥扫描这一步。
+
+---
+
+## 从 Bilibili 专栏导入
+
+`scripts/import-bilibili.mjs` 把 B 站专栏转成这个仓库的笔记：抓正文、下图片、转 Markdown、写 frontmatter。
+
+```bash
+# 单个：cv 号（或链接）= 落地路径（相对 docs/<分类>/）
+pnpm bili 14792889=dst/linux-server
+
+# 批量
+pnpm bili 14792889=dst/linux-server 14798689=dst/config 14801260=dst/windows-server
+
+# 不写 = 就用标题自动生成文件名
+pnpm bili 15317852
+```
+
+常用选项：
+
+| 选项 | 说明 |
+| --- | --- |
+| `--section <dir>` | 放到 docs/ 下哪个分类，默认 `games` |
+| `--cookies <path>` | Netscape 格式的 cookie 文件，默认读 `$BILI_COOKIES` 或 `~/yt-dlp/c-bili.txt` |
+| `--webp <质量>` | 截图转 WebP，默认 88。**强烈建议开着** |
+| `--draft` | 以草稿形式导入 |
+| `--delay <秒>` | 每篇之间的间隔，默认 3 |
+| `--dry-run` / `--force` | 只看不写 / 覆盖已存在的 |
+
+### 几个已经踩过的坑
+
+- **必须走 curl**：B 站风控看 TLS 指纹，Node 自带的 `fetch` 会被直接判成 `-509 请求过于频繁`。脚本里用的是 `curl` 子进程，别改回去。
+- **B 站把代码存在 `pre` 的 `codecontent` 属性里**，元素本身是空的，turndown 的 `isBlank()` 会把它当空白块删掉。所以要先 `inlineCodeBlocks()` 把代码灌回 `<pre><code>` 文本，再交给 turndown。
+- **`codecontent` 被转义了两层**，要 `decodeEntities()` 两次。
+- **图片一定要转 WebP**：B 站给的是 1920×1080 的 PNG，一张两三兆。转完一般能小 90% 以上（7 篇专栏：39MB → 6.7MB）。需要 `magick` 或 `cwebp`：`brew install imagemagick`。
+- **结尾的 B 站娘横幅**（`class="cut-off-N"`）会自动过滤掉。
+- **引用其它专栏的卡片图**会自动转成链接。
+
+导入后每篇都会带上「本文原载于 Bilibili 专栏」的提示框和原文链接，方便回溯。
+
+> 导入的是你自己的署名文章没问题；如果是别人的，记得先获得授权再搬。
 
 ---
 
