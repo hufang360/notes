@@ -31,6 +31,19 @@ features:
     linkText: 进入
 ---
 
+## 两个成体系的文集
+
+单篇笔记按内容分类，这两个专栏串则是**有先后顺序的一整套**，花的心思也最多：
+
+| 文集 | 篇数 | 讲什么 |
+| --- | --- | --- |
+| [[series/fuzhu-plan|腐竹计划]] | 42 | Terraria / TShock 开服：从零搭建、日常管理、指令、插件、REST API |
+| [[series/game-notes|游戏笔记]] | 12 | 沙盒三巨头杂记：Starbound 汉化、tModLoader、饥荒开服、Forge |
+
+> [!TIP]
+> 两篇都按「该怎么读」重排过，并标注了每篇在讲什么 —— 比 B 站原文集的时间序好跟。
+> 文集总览在 [[series/index|文集]]。
+
 ## 这个站是什么
 
 一个 Markdown 笔记仓库：用 [Obsidian](https://obsidian.md) 写作，用 [VitePress](https://vitepress.dev) 发布到 GitHub Pages。

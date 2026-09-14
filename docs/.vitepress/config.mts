@@ -25,6 +25,7 @@ const SECTIONS: SidebarSection[] = [
   { dir: 'software', text: '软件' },
   { dir: 'games', text: '游戏' },
   { dir: 'ops', text: '运维' },
+  { dir: 'series', text: '文集' },
   { dir: 'essay', text: '随笔' },
 ]
 

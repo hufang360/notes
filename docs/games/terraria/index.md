@@ -13,6 +13,10 @@ order: 30
 - [[resource-pack/index|汉化与资源包]] —— 语言包、音乐包、字体、材质包
 - [[tmodloader/index|tModLoader]] —— 模组服务端与客户端改动
 
+> [!TIP] 想看「整套怎么学」
+> B 站文集 [[series/fuzhu-plan|腐竹计划]] 把开服相关的 42 篇按阅读顺序重排了一遍，
+> 包括上面 tshock / plugins / client 三个分组里的内容。
+
 > [!WARNING] 版本三方对齐
 > 服务端、插件、客户端三者的版本必须严格对应，差一个小版本就会报错。
 > 装之前先确认三方版本号。

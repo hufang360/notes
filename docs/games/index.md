@@ -14,6 +14,9 @@ Terraria 一个游戏就占了 60 多篇，所以在里面又分了 TShock / 插
 - [[starbound/index|Starbound]] —— 手工开服、Docker 化、汉化、存档格式
 - [[minecraft/index|Minecraft]] —— Forge 服务端手工搭建
 
+按**阅读顺序**整理过的两个专栏串在 [[series/index|文集]]：
+[[series/fuzhu-plan|腐竹计划]]（TShock 开服 42 篇）、[[series/game-notes|游戏笔记]]（沙盒三巨头 12 篇）。
+
 ## 为什么记这些
 
 开服这件事坑特别密：32 位运行库、UDP 端口、时区、存档权限、插件版本对不上……

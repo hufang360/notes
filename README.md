@@ -49,6 +49,7 @@ pnpm check            # 提交前自查：密钥扫描 + 隐私目录检查
 │   │   ├── dst/  starbound/  minecraft/
 │   │
 │   ├── ops/                       分类：运维
+│   ├── series/                    分类：文集（B 站专栏串的导读，按阅读顺序重排）
 │   ├── essay/                     分类：随笔
 │   └── public/
 │       ├── favicon.svg
