@@ -110,10 +110,11 @@
 /* 太长的那条，鼠标悬停时左右滚动看全文。
    --marquee-shift / --marquee-duration 由 theme/index.ts 量出来后写进来。
    用 text-indent 而不是 transform：不用额外包一层 span，
-   也不会破坏默认的省略号（transform 会让元素整体移动，内容不会在框内滚）。 */
+   也不会破坏默认的省略号（transform 会让元素整体移动，内容不会在框内滚）。
+   ease-in-out：两端有加减速，转向不生硬；linear 会像在颤。 */
 .VPSidebarItem > .item:hover .text[data-overflow] {
   text-overflow: clip;
-  animation: vp-sidebar-marquee var(--marquee-duration, 6s) linear infinite alternate;
+  animation: vp-sidebar-marquee var(--marquee-duration, 2s) ease-in-out infinite alternate;
 }
 
 @keyframes vp-sidebar-marquee {

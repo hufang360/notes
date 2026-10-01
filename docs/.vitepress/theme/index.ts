@@ -19,15 +19,18 @@ function addSidebarTitles() {
     if (!text) continue
     // scrollWidth 是文字实际宽度，clientWidth 是可见宽度，差值就是要滚的距离
     const overflow = el.scrollWidth - el.clientWidth
-    // 只溢出几像素的就不滚了，那看着像抖动；但 tooltip 还是给
-    const marquee = overflow > 16
+    // 只溢出几十像素的就别滚了 —— 距离太短、速度再快也像在颤；tooltip 照给
+    const marquee = overflow > 48
     if (overflow > 1) el.title = text
     else el.removeAttribute('title')
     if (marquee) {
       el.dataset.overflow = ''
       el.style.setProperty('--marquee-shift', `-${overflow}px`)
-      // 每 60px 给 1 秒，再留 2 秒底 —— 太短会闪，太长会烦
-      el.style.setProperty('--marquee-duration', `${Math.max(3, Math.round(overflow / 60) + 2)}s`)
+      // 约 50px/秒；下限 1.6s，免得短距离一闪而过
+      el.style.setProperty(
+        '--marquee-duration',
+        `${Math.min(6, Math.max(1.6, overflow / 50)).toFixed(1)}s`
+      )
     } else {
       delete el.dataset.overflow
       el.style.removeProperty('--marquee-shift')
