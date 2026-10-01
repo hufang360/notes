@@ -49,9 +49,11 @@ jobs:
 
   # ---------------------------------------------------------------- #
   # 2. 构建静态站
+  #    故意不写 needs: secret-scan —— 两者并行跑，谁都不挡谁；
+  #    deploy 同时依赖两者，所以密钥扫描没过照样发不出去。
+  #    secret-scan 只要 6s，串行的话白白多等一个 job 的调度（~15s）。
   # ---------------------------------------------------------------- #
   build:
-    needs: secret-scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -88,7 +90,7 @@ jobs:
   # 3. 发布
   # ---------------------------------------------------------------- #
   deploy:
-    needs: build
+    needs: [secret-scan, build]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
