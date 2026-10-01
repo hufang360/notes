@@ -6,6 +6,7 @@ import mathjax3 from 'markdown-it-mathjax3'
 import { loadVault, buildSidebar, rewritePath } from './vault.mts'
 import { obsidianPlugin } from './obsidian.mts'
 import { mermaidPlugin } from './mermaid.mts'
+import { SCOPED_SECTIONS } from './sections.mts'
 
 /* ------------------------------------------------------------------ *
  * 1. 站点基本信息 —— 换仓库名 / 改标题，只改这一段
@@ -26,6 +27,9 @@ const SITE_DESC = '软件 / 游戏 / 运维 —— 踩过的坑和攒下的经�
  */
 const NAV = [
   { text: '首页', link: '/' },
+  { text: '一箩筐', link: '/misc/' },
+  { text: '腐竹计划', link: '/bv1/' },
+  { text: '游戏笔记', link: '/bv2/' },
   { text: '关于', link: '/about' },
 ]
 
@@ -84,6 +88,23 @@ export default defineConfig({
 
   sitemap: { hostname: SITE_URL },
 
+  /**
+   * 给 <html> 打个 data-section，让侧边栏能按节点收窄（CSS 在 custom.css）。
+   *
+   * 为什么不用 VitePress 原生的 multi-sidebar：它按 page.relativePath 匹配，
+   * 而这个值被 rewrites 拍平了（bv1/cv11045619.md → cv11045619.md），
+   * '/bv1/' 永远命中不了。给每篇加一个 sidebar key 倒是能命中，
+   * 但站点数据会从 6.6KB 涨到 123KB。所以改成构建时打标记。
+   */
+  transformHtml(code, _id, ctx) {
+    // 顶层目录名；根目录下的 .md 取文件名（about.md → about）
+    const section = String(ctx.pageData.filePath ?? '')
+      .split('/')[0]
+      .replace(/\.md$/, '')
+    if (!SCOPED_SECTIONS.includes(section)) return
+    return code.replace(/<html(\s|>)/, `<html data-section="${section}"$1`)
+  },
+
   vite: {
     build: {
       // mermaid 及其布局引擎（elk 等）是几个 600KB~1.4MB 的 chunk，
@@ -118,6 +139,9 @@ export default defineConfig({
 
   themeConfig: {
     nav: NAV,
+
+    // 顶栏标题左边的「笔记本」小图标（public/logo.svg，VPImage 会自动补 base）
+    logo: '/logo.svg',
 
     // 侧边栏全自动：docs/ 下的一级子目录就是节点，见 vault.mts 的 buildSidebar
     sidebar: buildSidebar(vault),

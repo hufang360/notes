@@ -14,7 +14,7 @@ order: 90
 
 - [[bv1|腐竹计划]] —— Terraria / TShock 开服，写得最系统的一组
 - [[bv2|游戏笔记]] —— Starbound、tModLoader、饥荒、Minecraft 的杂记
-- [[terraria|泰拉瑞亚]] —— TL Pro 材质包制作与转换
+- [[misc|一箩筐]] —— 零散的游戏笔记：泰拉瑞亚材质包、Starbound 服务端
 
 笔记是沉淀。有用就行，不求多。
 

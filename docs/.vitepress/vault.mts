@@ -260,11 +260,53 @@ export function pageUrl(rel: string): string {
 /**
  * 生成侧边栏。
  *
- * 全站只有一棵树：`docs/` 下的一级子目录就是节点，根目录下的 .md 直接列出来。
- * 没有「软件 / 游戏 / 运维」那种大分类了 —— 层次越少越好找。
+ * 默认全站一棵树：`docs/` 下的一级子目录就是节点，根目录下的 .md 直接列出来。
+ *
+ * 但 bv1 / bv2 单独分栏 —— 进到「腐竹计划」或「游戏笔记」时，侧边栏只列
+ * 该栏目自己的内容，不再把其他节点一并堆出来。
+ *
+ * 关键：VitePress 的 multi-sidebar 是按 **源文件相对路径**（page.relativePath）
+ * 匹配的，不是 URL。所以 `bv1/cv11045619.md` 能命中 `/bv1/`，
+ * 尽管它的地址被 rewrites 拍平成了 /cv11045619。
  */
 export function buildSidebar(vault: Vault): Record<string, SidebarItem[]> {
-  return { '/': buildTree(vault.published, '') }
+  const tree = buildTree(vault.published, '')
+
+  // bv1 / bv2 的条目按年份插「时间轴标记」：
+  // 标记是一个没有 link 的项 —— VitePress 会把它直接渲染成 .item > .text
+  // （有 link 的是 .item > .link > .text），所以 CSS 能精确选中它。
+  for (const dir of ['bv1', 'bv2']) {
+    const node = tree.find((i) => i.link === pageUrl(`${dir}/index.md`))
+    if (!node?.items) continue
+    const yearOf = new Map<string, string>()
+    for (const n of vault.published) {
+      if (!n.rel.startsWith(dir + '/')) continue
+      const y = String(n.data.sourceDate ?? '').slice(0, 4)
+      if (y) yearOf.set(pageUrl(n.rel), y)
+    }
+    const items: SidebarItem[] = []
+    let last = ''
+    for (const item of node.items) {
+      const y = yearOf.get(item.link ?? '')
+      if (y && y !== last) {
+        items.push({ text: y })
+        last = y
+      }
+      items.push(item)
+    }
+    node.items = items
+  }
+
+  const only = (dir: string) => {
+    const items = tree.filter((item) => item.link === pageUrl(`${dir}/index.md`))
+    return items.length ? items : tree
+  }
+  return {
+    '/bv1/': only('bv1'),
+    '/bv2/': only('bv2'),
+    '/misc/': only('misc'),
+    '/': tree,
+  }
 }
 
 function buildTree(notes: NoteMeta[], prefix: string): SidebarItem[] {

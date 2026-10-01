@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="#42b883" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 笔记本：封面 + 左侧书脊 + 两条字迹 -->
+  <rect x="4" y="2.5" width="15.5" height="19" rx="2.5"/>
+  <path d="M8.5 2.5v19"/>
+  <path d="M12.5 7.5h4M12.5 11h4"/>
+</svg>

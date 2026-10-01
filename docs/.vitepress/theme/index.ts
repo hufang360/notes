@@ -1,6 +1,7 @@
 import DefaultTheme from 'vitepress/theme'
 import type { Theme } from 'vitepress'
 import Mermaid from './Mermaid.vue'
+import { SCOPED_SECTIONS } from '../sections.mts'
 import './custom.css'
 
 /**
@@ -19,19 +20,20 @@ function addSidebarTitles() {
     if (!text) continue
     // scrollWidth 是文字实际宽度，clientWidth 是可见宽度，差值就是要滚的距离
     const overflow = el.scrollWidth - el.clientWidth
-    // 只溢出几十像素的就别滚了 —— 距离太短、速度再快也像在颤；tooltip 照给
-    const marquee = overflow > 48
-    if (overflow > 1) el.title = text
-    else el.removeAttribute('title')
-    if (marquee) {
+    // 只要真被截断了（出现省略号）就能滚。
+    // 之前那个 48px 阈值是为了躲 text-indent 的 scroll anchoring bug，
+    // 换成 transform 后不需要了。
+    if (overflow > 1) {
+      el.title = text
       el.dataset.overflow = ''
       el.style.setProperty('--marquee-shift', `-${overflow}px`)
-      // 约 50px/秒；下限 1.6s，免得短距离一闪而过
+      // 约 50px/秒；下限 1s，免得短距离一闪而过
       el.style.setProperty(
         '--marquee-duration',
-        `${Math.min(6, Math.max(1.6, overflow / 50)).toFixed(1)}s`
+        `${Math.min(6, Math.max(1, overflow / 50)).toFixed(1)}s`
       )
     } else {
+      el.removeAttribute('title')
       delete el.dataset.overflow
       el.style.removeProperty('--marquee-shift')
       el.style.removeProperty('--marquee-duration')
@@ -40,6 +42,22 @@ function addSidebarTitles() {
 }
 
 let watching = false
+
+/**
+ * 侧边栏按栏目收窄靠 <html data-section>。构建时会按当前页写好，
+ * 但那是静态 HTML —— SPA 切页（不刷新）时 <html> 不会重渲染，
+ * 标记会一直停在上一次的值，于是侧边栏会出现「还停在上一个栏目 /
+ * 显示全部 / 空」。这里每次路由变化后按当前页的源路径重写一遍。
+ */
+function syncSection(filePath: string | undefined) {
+  if (typeof document === 'undefined') return
+  const section = String(filePath ?? '')
+    .split('/')[0]
+    .replace(/\.md$/, '')
+  const root = document.documentElement
+  if (SCOPED_SECTIONS.includes(section)) root.setAttribute('data-section', section)
+  else root.removeAttribute('data-section')
+}
 
 /**
  * 侧边栏节点默认折叠，折叠时 clientWidth 是 0，量不出截断。
@@ -67,6 +85,8 @@ export default {
     app.component('Mermaid', Mermaid)
 
     router.onAfterRouteChange = () => {
+      // route.data.filePath 是源路径（如 bv1/cv11045619.md）
+      syncSection((router.route?.data as { filePath?: string } | undefined)?.filePath)
       watchSidebar()
       addSidebarTitles()
     }

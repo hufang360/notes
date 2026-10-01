@@ -66,4 +66,4 @@ Starbound、饥荒、Minecraft 都有。
 ## 相关
 
 - [[bv1|腐竹计划]] —— 另一个文集，纯 Terraria / TShock 开服
-- [[terraria|泰拉瑞亚]] —— TL Pro 材质包制作与转换
+- [[misc|一箩筐]] —— 零散的游戏笔记：泰拉瑞亚材质包、Starbound 服务端

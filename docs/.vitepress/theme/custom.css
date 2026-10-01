@@ -2,18 +2,11 @@
  * 站点自定义样式
  * ------------------------------------------------------------------ */
 
-/* 正文里的图片：圆角 + 限宽 + 点击可看大图（浏览器默认行为） */
+/* 正文里的图片：限宽 + 点击可看大图（浏览器默认行为） */
 .vp-doc img {
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
   margin: 1rem auto;
   display: block;
   max-width: 100%;
-}
-
-/* 深色模式下阴影弱一点 */
-.dark .vp-doc img {
-  box-shadow: 0 2px 12px rgb(0 0 0 / 45%);
 }
 
 /* Obsidian 的 ==高亮== */
@@ -78,13 +71,15 @@
   color: var(--vp-c-text-2);
 }
 
-/* 侧边栏：紧凑 + 单行截断（超出的用省略号）。
+/* 侧边栏条目只占一行，超出的用省略号。
    像「饥荒联机版：多人联机服务器搭建 上篇 | 搞定 CentOS8 运行环境」
    这种长标题会把侧边栏撑成两三行，列表高低不齐。
    要点：flex 子项默认 min-width:auto 不肯缩，得先把它压成 0，
    再在 .text 上 nowrap + overflow + ellipsis 才有省略号。 */
 .VPSidebarItem .item > .link {
   min-width: 0;
+  /* 悬停时 .text 会撑成文字实际宽度，靠这里把超出部分裁掉 */
+  overflow: hidden;
 }
 
 .VPSidebarItem .text {
@@ -92,36 +87,101 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* 比 VitePress 默认（14px / 24px / 4px 0）紧凑一档 */
-  font-size: 13px;
-  line-height: 20px;
-  padding: 2px 0;
-}
-
-/* 分组之间的留白也收一收 */
-.VPSidebarItem.level-0 {
-  padding-bottom: 14px;
-}
-
-.VPSidebarItem.collapsed.level-0 {
-  padding-bottom: 8px;
 }
 
 /* 太长的那条，鼠标悬停时左右滚动看全文。
    --marquee-shift / --marquee-duration 由 theme/index.ts 量出来后写进来。
-   用 text-indent 而不是 transform：不用额外包一层 span，
-   也不会破坏默认的省略号（transform 会让元素整体移动，内容不会在框内滚）。
-   ease-in-out：两端有加减速，转向不生硬；linear 会像在颤。 */
+
+   为什么是 transform 而不是 text-indent：
+   text-indent 是布局属性，而 overflow:hidden 的元素同时是滚动容器，
+   会被 scroll anchoring 往反方向拉回去 —— 表现就是只挪几像素、来回抖。
+   transform 是合成器动画，不碰布局，也不受 anchoring 影响。
+
+   悬停时把 .text 撑成 max-content（文字真实宽度），超出 .link 的部分被裁掉，
+   再整体左移 --marquee-shift，就能看到结尾。 */
 .VPSidebarItem > .item:hover .text[data-overflow] {
+  flex: 0 0 max-content;
   text-overflow: clip;
-  animation: vp-sidebar-marquee var(--marquee-duration, 2s) ease-in-out infinite alternate;
+  /* 单程时间 = --marquee-duration；一个循环里单程只占 38%，
+     所以 cycle 要乘 1/0.38 ≈ 2.6，否则来回会比原来快一倍多 */
+  animation: vp-sidebar-marquee calc(var(--marquee-duration, 2s) * 2.6) ease-in-out infinite;
 }
 
+/* 起点停一下 → 走到结尾 → 在结尾停一下 → 再走回来（不是跳回去） */
 @keyframes vp-sidebar-marquee {
-  from {
-    text-indent: 0;
+  0%,
+  8% {
+    transform: translateX(0);
   }
-  to {
-    text-indent: var(--marquee-shift, 0);
+  46%,
+  62% {
+    transform: translateX(var(--marquee-shift, 0px));
   }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* 顶层节点（一箩筐 / 腐竹计划 / 游戏笔记）：进入某节点时只留它自己。
+   标记由 config.mts 的 transformHtml 打在 <html> 上，构建时就生效、不闪。
+   注：VitePress 原生 multi-sidebar 按 rewrites 之后的 relativePath 匹配，
+   平地址下命中不了 /bv1/，所以只能这样。
+
+   区分两类顶层组：
+   - 节点组：level-0 下面有 .item（带链接的标题）
+   - 「关于本站」组：level-0 下面是空的，只有 .items
+   （不能用 :has(a)，因为节点组展开后里面也全是 <a>；也不能嵌套 :has()，规范禁止） */
+html[data-section] .VPSidebar .group:has(> .VPSidebarItem.level-0 > .item) {
+  display: none;
+}
+html[data-section='bv1'] .VPSidebar .group:has(> .VPSidebarItem.level-0 > .item > a[href$='/bv1/']),
+html[data-section='bv2'] .VPSidebar .group:has(> .VPSidebarItem.level-0 > .item > a[href$='/bv2/']),
+html[data-section='misc'] .VPSidebar .group:has(> .VPSidebarItem.level-0 > .item > a[href$='/misc/']) {
+  display: block;
+}
+
+/* 「关于本站」那一组：只在 about 页显示 */
+html[data-section]:not([data-section='about']) .VPSidebar .group:not(:has(> .VPSidebarItem.level-0 > .item)) {
+  display: none;
+}
+
+/* ── 侧边栏时间轴 ────────────────────────────────────────
+   bv1 / bv2 的条目按年份分组，每组前有一个「无链接」的年份标记
+   （见 vault.mts 的 buildSidebar）。无链接的项渲染成 .item > .text，
+   有链接的是 .item > .link > .text，所以这里能精确命中标记。 */
+
+/* 竖线只画在「含年份标记」的节点里 */
+.VPSidebarItem.level-0 > .items:has(> .VPSidebarItem.level-1 > .item > .text) {
+  margin-left: 3px;
+  padding-left: 10px;
+  border-left: 1px solid var(--vp-c-divider);
+}
+
+/* 年份标记 */
+.VPSidebarItem.level-1 > .item > .text {
+  position: relative;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--vp-c-text-3);
+  padding-top: 16px;
+  padding-bottom: 2px;
+}
+
+/* 标记左边的小圆点，压在竖线上；用侧边栏底色描一圈，把线断开。
+   注意挂在 .item 上而不是 .text —— .text 为了省略号有 overflow:hidden，
+   会把溢出的伪元素裁掉。 */
+.VPSidebarItem.level-1 > .item:has(> .text) {
+  position: relative;
+}
+.VPSidebarItem.level-1 > .item:has(> .text)::before {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: 24px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vp-c-brand-1);
+  box-shadow: 0 0 0 3px var(--vp-sidebar-bg-color, var(--vp-c-bg));
 }
