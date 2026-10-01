@@ -213,11 +213,6 @@ export function loadVault(root: string): Vault {
   return { root, all, published, hidden, noteIndex, ambiguousBases, assetIndex, warnings }
 }
 
-export interface SidebarSection {
-  dir: string
-  text: string
-}
-
 export interface SidebarItem {
   text: string
   link?: string
@@ -226,32 +221,35 @@ export interface SidebarItem {
 }
 
 /**
- * 按目录生成侧边栏。
- * - 子目录 -> 可折叠分组
- * - 同级按 frontmatter order 排序，没写的排后面，再按文件名
+ * 节点目录不进 URL。
+ *
+ * `bv1/cv11045619.md` -> `cv11045619.md`，页面地址就是 /notes/cv11045619，
+ * 不再带 bv1 那一层。
+ *
+ * 这样做的好处是两边都讨好：**文件在 Obsidian 里仍按节点分文件夹**（一个目录里
+ * 堆 76 篇笔记很难找），而**分享出去的地址是平的**。
+ *
+ * 节点的 index.md 不动 —— 拍平后会变成顶层的 index.md，和首页撞车。
+ * config.mts 的 rewrites 和侧边栏链接都用这个函数，两边必须一致。
  */
-export function buildSidebar(vault: Vault, sections: SidebarSection[]): Record<string, SidebarItem[]> {
-  const result: Record<string, SidebarItem[]> = {}
+export function rewritePath(rel: string): string {
+  const parts = rel.split('/')
+  return parts.length === 2 && parts[1] !== 'index.md' ? parts[1] : rel
+}
 
-  for (const section of sections) {
-    const prefix = section.dir + '/'
-    const notes = vault.published.filter((n) => n.rel.startsWith(prefix))
+/** 源码相对路径 -> 站内 URL（不带 base 前缀）。index.md 会得到带尾斜杠的目录地址 */
+export function pageUrl(rel: string): string {
+  return '/' + rewritePath(rel).replace(/\.md$/, '').replace(/(^|\/)index$/, '$1')
+}
 
-    const rootNote = notes.find((n) => n.rel === prefix + 'index.md')
-    const items = buildTree(notes, prefix)
-
-    result['/' + section.dir + '/'] = [
-      {
-        text: section.text,
-        collapsed: false,
-        items: rootNote
-          ? [{ text: rootNote.title, link: '/' + section.dir + '/' }, ...items]
-          : items,
-      },
-    ]
-  }
-
-  return result
+/**
+ * 生成侧边栏。
+ *
+ * 全站只有一棵树：`docs/` 下的一级子目录就是节点，根目录下的 .md 直接列出来。
+ * 没有「软件 / 游戏 / 运维」那种大分类了 —— 层次越少越好找。
+ */
+export function buildSidebar(vault: Vault): Record<string, SidebarItem[]> {
+  return { '/': buildTree(vault.published, '') }
 }
 
 function buildTree(notes: NoteMeta[], prefix: string): SidebarItem[] {
@@ -284,7 +282,7 @@ function buildTree(notes: NoteMeta[], prefix: string): SidebarItem[] {
     entries.push({
       order: n.order,
       tie: n.rel,
-      item: { text: n.title, link: '/' + n.rel.replace(/\.md$/, '') },
+      item: { text: n.title, link: pageUrl(n.rel) },
     })
   }
 
@@ -301,8 +299,10 @@ function buildTree(notes: NoteMeta[], prefix: string): SidebarItem[] {
       tie: dirPrefix,
       item: {
         text: indexNote ? indexNote.title : dir,
-        link: indexNote ? '/' + dirPrefix.replace(/\/$/, '') : undefined,
-        collapsed: false,
+        link: indexNote ? pageUrl(indexNote.rel) : undefined,
+        // 默认折叠。VitePress 会在当前页属于该节点时自动展开，
+        // 否则 40 多篇平铺展开会把侧边栏拉得很长。
+        collapsed: true,
         items: children,
       },
     })

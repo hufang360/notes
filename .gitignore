@@ -1,5 +1,6 @@
 # ---------- 依赖 / 构建产物 ----------
 node_modules/
+.pnpm-store/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 *.tsbuildinfo
@@ -45,6 +46,9 @@ Thumbs.db
 .obsidian/workspace-mobile.json
 .obsidian/cache
 .trash/
+
+# ---------- 取出来的原图（pnpm images:fetch 的默认输出目录）----------
+originals/
 
 # ---------- 临时文件 ----------
 *.tmp

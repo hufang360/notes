@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.22.0",
   "description": "软件 / 游戏 / 运维 笔记，Obsidian 写作，VitePress 发布",
   "scripts": {
     "dev": "vitepress dev docs",
@@ -10,6 +11,11 @@
     "preview": "vitepress preview docs",
     "new": "node scripts/new-note.mjs",
     "bili": "node scripts/import-bilibili.mjs",
+    "images": "node scripts/images.mjs",
+    "images:check": "node scripts/images.mjs check",
+    "images:fetch": "node scripts/images.mjs fetch",
+    "images:prune": "node scripts/images.mjs prune",
+    "images:secure": "node scripts/images.mjs secure",
     "check": "node scripts/check-secrets.mjs",
     "status": "node scripts/status.mjs",
     "prepare": "node scripts/install-hooks.mjs"

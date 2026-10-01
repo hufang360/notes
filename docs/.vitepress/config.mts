@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitepress'
 import mathjax3 from 'markdown-it-mathjax3'
-import { loadVault, buildSidebar, type SidebarSection } from './vault.mts'
+import { loadVault, buildSidebar, rewritePath } from './vault.mts'
 import { obsidianPlugin } from './obsidian.mts'
 import { mermaidPlugin } from './mermaid.mts'
 
@@ -20,13 +20,13 @@ const SITE_URL = `https://${OWNER}.github.io${BASE}`
 const SITE_TITLE = 'hf 的笔记'
 const SITE_DESC = '软件 / 游戏 / 运维 —— 踩过的坑和攒下的经验'
 
-/** 顶部分类。加分类时在这里加一行，并建同名目录 */
-const SECTIONS: SidebarSection[] = [
-  { dir: 'software', text: '软件' },
-  { dir: 'games', text: '游戏' },
-  { dir: 'ops', text: '运维' },
-  { dir: 'series', text: '文集' },
-  { dir: 'essay', text: '随笔' },
+/**
+ * 顶部导航。只有首页和关于 —— 内容导航全交给左侧边栏，
+ * 不再分「软件 / 游戏 / 运维」那种大分类。
+ */
+const NAV = [
+  { text: '首页', link: '/' },
+  { text: '关于', link: '/about' },
 ]
 
 /* ------------------------------------------------------------------ *
@@ -73,6 +73,15 @@ export default defineConfig({
   // 不参与构建的文件：草稿 + private/ + 模板
   srcExclude: ['private/**', '_templates/**', '**/README.md', ...vault.hidden.map((n) => n.rel)],
 
+  // 节点目录不进 URL：bv1/cv11045619.md -> /notes/cv11045619
+  // 文件仍按节点分文件夹（Obsidian 里好找），只是输出地址拍平了。
+  // 同名的 rewritePath 在 vault.mts 里，侧边栏链接用它生成，两边必须一致。
+  rewrites: rewritePath,
+
+  // 附件的下载链接指向 public/ 下的真实文件，不是页面，别当死链报错。
+  // 附件不存在时插件会打「找不到笔记」，漏网不了。
+  ignoreDeadLinks: [/\/files\//],
+
   sitemap: { hostname: SITE_URL },
 
   vite: {
@@ -108,14 +117,10 @@ export default defineConfig({
   },
 
   themeConfig: {
-    nav: [
-      { text: '首页', link: '/' },
-      ...SECTIONS.map((s) => ({ text: s.text, link: `/${s.dir}/` })),
-      { text: '关于', link: '/about' },
-    ],
+    nav: NAV,
 
-    // 侧边栏按目录自动生成，见 vault.mts 的 buildSidebar
-    sidebar: buildSidebar(vault, SECTIONS),
+    // 侧边栏全自动：docs/ 下的一级子目录就是节点，见 vault.mts 的 buildSidebar
+    sidebar: buildSidebar(vault),
 
     outline: { level: [2, 3], label: '本页目录' },
     lastUpdated: { text: '最后更新' },

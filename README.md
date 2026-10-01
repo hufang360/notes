@@ -1,6 +1,8 @@
 # hf 的笔记
 
-软件 / 游戏 / 运维的笔记。用 [Obsidian](https://obsidian.md) 写，用 [VitePress](https://vitepress.dev) 生成静态站，通过 GitHub Actions 发布到 GitHub Pages。
+一些笔记，目前主要采集自己之前在哔哩哔哩上写的专栏文章，主要是泰拉瑞亚、starbound、饥荒开服相关。
+
+用 [Obsidian](https://obsidian.md) 写，用 [VitePress](https://vitepress.dev) 生成静态站，通过 GitHub Actions 发布到 GitHub Pages。
 
 线上地址：**https://hufang360.github.io/notes/**
 
@@ -12,6 +14,15 @@
 pnpm install          # 装依赖，顺便自动装好 git 钩子
 pnpm dev              # 本地预览 http://localhost:5173/notes/
 ```
+
+不想装 Node 就用 Docker（`docker.sh`）：
+
+```bash
+./docker.sh             # 开发服务器，改笔记即时生效
+./docker.sh preview     # 构建 + 静态预览，顺带跑死链检查
+```
+
+端口分别是 `5173` 和 `4173`，地址里的 `/notes/` 不能省（站点 base 配的就是它）。
 
 改 Markdown 会热更新，不用刷新。
 
@@ -30,38 +41,46 @@ pnpm check            # 提交前自查：密钥扫描 + 隐私目录检查
 
 ```
 .
-├── docs/                          ← VitePress 内容根目录
+├── docs/                          ← VitePress 内容根目录（也是 Obsidian vault 的内容目录）
 │   ├── .vitepress/
-│   │   ├── config.mts             站点配置（标题、分类、导航、搜索）
+│   │   ├── config.mts             站点配置（标题、导航、搜索）
 │   │   ├── vault.mts              扫描笔记 / 解析 frontmatter / 生成侧边栏
 │   │   ├── obsidian.mts           Obsidian 语法转换（双链、callout、注释…）
 │   │   ├── mermaid.mts            把 ```mermaid 变成按需加载的组件
 │   │   └── theme/                 自定义样式和 Mermaid 组件
 │   ├── index.md                   首页
-│   ├── about.md                   关于页
-│   │
-│   ├── software/                  分类：软件
-│   │   ├── ai-tools/  design/     子分组（每个子目录一个 index.md）
-│   │   └── git-cheatsheet.md …    直接放在分类下的单篇
-│   │
-│   ├── games/                     分类：游戏
-│   │   ├── terraria/              └─ tshock/ plugins/ client/ resource-pack/ tmodloader/
-│   │   ├── dst/  starbound/  minecraft/
-│   │
-│   ├── ops/                       分类：运维
-│   ├── series/                    分类：文集（B 站专栏串的导读，按阅读顺序重排）
-│   ├── essay/                     分类：随笔
-│   └── public/
-│       ├── favicon.svg
-│       └── assets/                ← 所有图片都放这里（按分类分目录）
-│
+│   ├── about.md                   关于（技术实现、隐私说明都在这）
+│   ├── bv1/                       腐竹计划（B 站文集，42 篇平铺）
+│   ├── bv2/                       游戏笔记（B 站文集，13 篇平铺）
+│   ├── starbound/                 Starbound（1 篇平铺）
+│   ├── terraria/                  泰拉瑞亚（2 篇平铺）
+│   └── public/assets/             图片，全部平铺，不分子目录
 ├── private/                       ← 私密内容，永远不会被提交（见下文）
 ├── _templates/note.md             新笔记模板
 ├── scripts/                       辅助脚本（新建笔记、导入 B 站专栏、自查）
 ├── hooks/pre-commit               git 提交钩子
+├── docker.sh                      本地预览（不用装 Node）
 ├── .github/workflows/deploy.yml   自动部署
 └── .gitleaks.toml                 密钥扫描规则
 ```
+
+**目录就是导航，只有一层。** `docs/` 下的一级目录就是一个节点，里面的笔记平铺，不再往下分层。
+没有「软件 / 游戏 / 运维」那种大分类 —— 顶部导航只有「首页」和「关于」，内容全靠左侧边栏。
+
+**但节点目录不进 URL**：`docs/bv1/cv11045619.md` 的地址是 `https://…/notes/cv11045619`。
+用 VitePress 的 `rewrites` 实现，好处是文件在 Obsidian 里仍按节点分文件夹（一个目录堆 76 篇笔记没法找），
+分享出去的地址却是平的。
+
+一个节点 = 一个目录 + 一个 `index.md`（当导读页和节点标题）：
+
+```
+docs/bv1/
+├── index.md           ← 节点标题取自它的 frontmatter.title，也是点击节点后的落地页
+├── vol26001-*.md
+└── …42 篇平铺
+```
+
+节点默认折叠，进到某个节点下的页面时会自动展开，并在侧边栏高亮当前页。
 
 **目录就是导航**：`docs/<分类>/` 一个目录就是一个分组，目录里的 `index.md` 提供分组标题和总览页，
 `order` 决定排序。侧边栏、分组、导航全部自动生成，不用手写。
@@ -70,7 +89,7 @@ pnpm check            # 提交前自查：密钥扫描 + 隐私目录检查
 
 ## 写一篇笔记
 
-在 `docs/software/`（或 `games/`、`ops/`）下新建一个 `.md` 文件，开头写 frontmatter：
+在 `docs/` 下任意一个节点目录里（比如 `docs/bv1/`）新建一个 `.md`，开头写 frontmatter：
 
 ```yaml
 ---
@@ -100,18 +119,23 @@ pnpm new "Docker 清理磁盘" -s ops --slug docker-disk-cleanup
 
 ### 图片
 
-图片统一放 `docs/public/assets/` 下面，引用时写 `![[文件名.png]]` 就行。
-
-```
-docs/public/assets/
-├── obsidian-attachment-setting.png
-├── games/terraria-server-console.png
-└── ops/disk-usage-df.png
-```
+图片统一放 `docs/public/assets/` 下，**全部平铺，不分子目录**，引用时写 `![[文件名.png]]` 就行。
 
 在 Obsidian 里粘贴截图会自动落到这个目录（因为 `.obsidian/app.json` 已经设好了）。
 
-**注意**：不同目录下不要有同名图片。构建时如果发现重名会警告，因为 `![[server.png]]` 不知道该指哪一个。
+**注意**：不要有同名图片。构建时如果发现重名会警告，因为 `![[server.png]]` 不知道该指哪一个。
+
+### 附件
+
+脚本、压缩包、示例配置这类**下载用**的文件放 `docs/public/files/`，一样平铺。
+
+```markdown
+[[deploy.sh|部署脚本]]      ← 推荐：Obsidian 里是链接，站上也是链接
+![[deploy.sh|部署脚本]]     ← 站上一样，但 Obsidian 会把文件内容内联展开
+```
+
+**别放进 `assets/`**：`pnpm images:prune` 的孤儿判定只看图片的 `![[...]]` 引用，
+附件放进去会被当孤儿删掉。
 
 ---
 
@@ -127,6 +151,7 @@ docs/public/assets/
 | `![[图片.png]]` | 嵌入图片 |
 | `![[图片.png\|400]]` | 嵌入图片并限定宽度 |
 | `![[笔记名]]` | 笔记嵌入 → 退化成一条链接（静态站做不了内联转写） |
+| `[[x.sh\|下载]]` `![[x.sh\|下载]]` | 附件链接（脚本、压缩包…），地址自动带 base |
 | `> [!note]` `> [!warning]` … | 提示框，note/tip/warning/danger/question 等都认 |
 | `%%注释%%` | 构建时删除，网站上不存在 |
 | `==高亮==` | 高亮 |
@@ -282,7 +307,109 @@ pnpm bili 15317852
 
 导入后每篇都会带上「本文原载于 Bilibili 专栏」的提示框和原文链接，方便回溯。
 
+### 命名约定：采集来的笔记用 cv 号
+
+从专栏采集的笔记一律命名为 `cv<号>.md`，图片命名成 `cv<号>-<序号>.webp`。
+好处是**打开任何一页都能直接对应回原始专栏**：
+
+```
+docs/bv2/cv15317852.md            ← 对应 https://www.bilibili.com/read/cv15317852/
+docs/public/assets/cv15317852-01.webp
+```
+
+所以导入时路径要写成 `cv<号>`：
+
+```bash
+pnpm bili 15317852=bv2/cv15317852
+```
+
+自己写的笔记（`about.md`、各节点的 `index.md` 等）不用这个规则。
+
 > 导入的是你自己的署名文章没问题；如果是别人的，记得先获得授权再搬。
+
+---
+
+## 图片：格式、原图、体检
+
+站点上的图都是**压缩过的 WebP**（原 PNG 的 12% 左右），不是原图。但任何时候都能把原图拿回来。
+
+### 来源清单
+
+`scripts/assets-sources.json` 记录每张图的**原图 URL、原图文件名**（443 条，约 60KB）：
+B 站导入的图顺着 URL 重下即可；你自己粘的图会归档在 `private/originals/`（不进 git）。
+
+```bash
+pnpm images manifest         # 重建清单（需要 B 站 cookie，抓 56 篇文章）
+pnpm images:check            # 体检
+pnpm images:fetch <关键词>    # 取原图
+pnpm images:prune            # 删掉没被引用的图（删文章后用）
+pnpm images:secure           # 把只被 private/ 引用的图挪出公共目录
+pnpm images webp             # 把 PNG 转 WebP
+```
+
+### 取原图
+
+```bash
+pnpm images:fetch cv14798689              # 这一篇的全部原图
+pnpm images:fetch cv14798689-01           # 单张
+pnpm images:fetch --all --out=~/orig      # 全部 443 张
+```
+
+出来的文件名是**B 站的原文件名**（`<hash>.png`），尺寸是原始尺寸。
+
+### 自己粘的图会怎样
+
+Obsidian 设置 `attachmentFolderPath: "docs/public/assets"`，所以粘贴的图会：
+
+| | |
+| --- | --- |
+| 落到 | `docs/public/assets/` 根目录（不分子目录） |
+| 格式 | **保持 PNG，不自动转** |
+| 引用 | 自动写 `![[Pasted image xxx.png]]`，构建能正常渲染 |
+
+**为什么不自动转**：剪贴板里的图存下来就是唯一的原图，转了就没有了。
+
+`pnpm images webp` 会区别对待：
+
+- **有来源 URL 的**（B 站导入）→ 直接转，原图随时能重下
+- **没有来源的**（自己粘的）→ **默认跳过**；加 `--all` 才转，转之前先把原图归档到 `private/originals/`
+
+### 体检与清理
+
+```bash
+pnpm images:check            # 只看，不改
+pnpm images:prune            # 预览：列出可以删的孤儿图
+pnpm images:prune --yes      # 真删
+pnpm images:secure           # 把私密图挪到 private/assets/
+```
+
+`check` 查四件事：
+
+1. **没被任何笔记引用的图** —— 删了引用不等于删了文件，它们**仍然会发布到网站**
+   （`docs/public/` 是原样拷贝）。删文章之后跑 `images:prune` 收拾。
+2. **只被 `private/` 笔记引用的图** —— 笔记是私密的，图却在公共资源目录里、
+   会被提交并发布。`images:secure` 会把它们挪到 `private/assets/`。
+3. **原图已不可再获取的图** —— 没来源 URL 也没本地归档，转了就永久丢失。
+4. **体积异常的图**。
+
+#### 删掉一篇专栏文章的流程
+
+```bash
+# 1. 删笔记（Obsidian 里删，或者 rm）
+# 2. 看看它的图变成孤儿了没
+pnpm images:prune
+# 3. 确认没问题就删掉
+pnpm images:prune --yes
+# 4. 构建
+pnpm build
+```
+
+顺带一提：这些图的来源记录可以留着（几十字节），以后想找原图还能查到来自哪篇专栏。
+
+> [!WARNING]
+> 附件目录是全局固定的，跟你在哪篇笔记里粘贴无关。
+> **在 `private/` 笔记里粘图，图片照样会进 `docs/public/assets/` 并被提交、被发布。**
+> 私密笔记的配图请粘完手动移到 `private/` 下。
 
 ---
 

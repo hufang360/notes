@@ -16,7 +16,7 @@
 import path from 'node:path'
 import type MarkdownIt from 'markdown-it'
 import type Token from 'markdown-it/lib/token.mjs'
-import type { NoteRef } from './vault.mts'
+import { pageUrl, type NoteRef } from './vault.mts'
 
 export interface ObsidianOptions {
   /** 见 vault.mts 的 noteIndex */
@@ -118,8 +118,12 @@ function resolveNoteLink(
   }
 
   const fromDir = path.posix.dirname(currentRel)
-  let href = path.posix.relative(fromDir === '.' ? '' : fromDir, found.rel)
-  if (!href.startsWith('.')) href = './' + href
+  // 输出**根绝对路径**（如 /cv11045619），不是相对路径。
+  // config.mts 的 rewrites 会把节点目录从地址里去掉，而 VitePress 的
+  // link 插件不会跟着 rewrite 相对链接 —— 只有绝对路径才会指向最终 URL。
+  // 死链检查器会拿 rewrites.inv 反查回源文件，所以照样能校验。
+  void fromDir
+  let href = pageUrl(found.rel)
   if (anchor) href += '#' + slugify(anchor)
 
   return { href, title: found.title }
@@ -146,6 +150,20 @@ function resolveAsset(
     alt: isWidth ? name.split('/').pop()! : extra || name.split('/').pop()!,
     width: isWidth ? extra : undefined,
   }
+}
+
+/**
+ * 非图片附件（脚本、压缩包、示例配置…）的链接。
+ * 和图片一样按文件名从 `docs/public/` 里找，返回带 base 的地址，
+ * 这样改了仓库名也不会 404。
+ */
+function resolveFileLink(
+  rawTarget: string,
+  assetIndex: Map<string, string>
+): { src: string; label: string } | null {
+  const name = rawTarget.split('|')[0].trim().replace(/\\/g, '/').split('/').pop()!
+  const src = assetIndex.get(name.toLowerCase())
+  return src ? { src, label: name } : null
 }
 
 /** 把一段纯文本里的 [[...]] 拆成 token */
@@ -196,6 +214,13 @@ function expandText(
           continue
         }
       } else {
+        // 非图片附件（脚本、压缩包…）：站点上退化成下载链接
+        const file = resolveFileLink(inner, ctx.opts.assetIndex)
+        if (file) {
+          const label = pipe === -1 ? file.label : inner.slice(pipe + 1).trim()
+          out.push(...linkTokens(state, file.src, label))
+          continue
+        }
         // ![[整篇笔记]] 的嵌入：静态站做不了内联转写，退化成链接
         const target = resolveNoteLink(
           pipe === -1 ? inner : inner.slice(0, pipe),
@@ -211,6 +236,16 @@ function expandText(
         }
       }
     } else {
+      // 带扩展名的（[[x.sh]]、[[x.zip]]…）先按附件找，免得被当成笔记报「找不到」
+      const ext = /\.[a-z0-9]+$/i.exec(inner.split('|')[0].trim())?.[0].toLowerCase()
+      if (ext && ext !== '.md') {
+        const file = resolveFileLink(inner, ctx.opts.assetIndex)
+        if (file) {
+          const label = pipe === -1 ? file.label : inner.slice(pipe + 1).trim()
+          out.push(...linkTokens(state, file.src, label))
+          continue
+        }
+      }
       const target = resolveNoteLink(
         pipe === -1 ? inner : inner.slice(0, pipe),
         ctx.currentRel,
