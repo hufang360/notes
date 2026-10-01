@@ -77,3 +77,50 @@
   font-size: 0.875rem;
   color: var(--vp-c-text-2);
 }
+
+/* 侧边栏：紧凑 + 单行截断（超出的用省略号）。
+   像「饥荒联机版：多人联机服务器搭建 上篇 | 搞定 CentOS8 运行环境」
+   这种长标题会把侧边栏撑成两三行，列表高低不齐。
+   要点：flex 子项默认 min-width:auto 不肯缩，得先把它压成 0，
+   再在 .text 上 nowrap + overflow + ellipsis 才有省略号。 */
+.VPSidebarItem .item > .link {
+  min-width: 0;
+}
+
+.VPSidebarItem .text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* 比 VitePress 默认（14px / 24px / 4px 0）紧凑一档 */
+  font-size: 13px;
+  line-height: 20px;
+  padding: 2px 0;
+}
+
+/* 分组之间的留白也收一收 */
+.VPSidebarItem.level-0 {
+  padding-bottom: 14px;
+}
+
+.VPSidebarItem.collapsed.level-0 {
+  padding-bottom: 8px;
+}
+
+/* 太长的那条，鼠标悬停时左右滚动看全文。
+   --marquee-shift / --marquee-duration 由 theme/index.ts 量出来后写进来。
+   用 text-indent 而不是 transform：不用额外包一层 span，
+   也不会破坏默认的省略号（transform 会让元素整体移动，内容不会在框内滚）。 */
+.VPSidebarItem > .item:hover .text[data-overflow] {
+  text-overflow: clip;
+  animation: vp-sidebar-marquee var(--marquee-duration, 6s) linear infinite alternate;
+}
+
+@keyframes vp-sidebar-marquee {
+  from {
+    text-indent: 0;
+  }
+  to {
+    text-indent: var(--marquee-shift, 0);
+  }
+}
