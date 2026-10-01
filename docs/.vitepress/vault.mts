@@ -94,6 +94,17 @@ function firstHeading(body: string): string | undefined {
   return m?.[1]?.trim()
 }
 
+/**
+ * 采集自 B 站的笔记（frontmatter 里有 source: .../cv<号>），
+ * **没写 order 时**按 cv 号倒序 —— 号大的新，排前面。
+ * 这样导入器不用再算 order，新文章自动落到最前。
+ */
+export function cvSortKey(data: Frontmatter): number | undefined {
+  const src = typeof data.source === 'string' ? data.source : ''
+  const m = /\/cv(\d+)/.exec(src)
+  return m ? -Number(m[1]) : undefined
+}
+
 export interface NoteMeta {
   /** 绝对路径 */
   file: string
@@ -169,7 +180,11 @@ export function loadVault(root: string): Vault {
       file,
       rel,
       title: String(data.title ?? firstHeading(body) ?? path.basename(rel, '.md')),
-      order: typeof data.order === 'number' ? data.order : Number.MAX_SAFE_INTEGER,
+      // 显式 order 优先；没写就看 cv 号（倒序）；都没有就排最后
+      order:
+        typeof data.order === 'number'
+          ? data.order
+          : (cvSortKey(data) ?? Number.MAX_SAFE_INTEGER),
       data,
       private: isPrivate(data),
     })

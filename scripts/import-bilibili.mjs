@@ -749,24 +749,6 @@ function slugifyAscii(title) {
   return s || 'untitled-' + Date.now().toString(36)
 }
 
-function nextOrder(dir) {
-  if (!fs.existsSync(dir)) return 100
-  let max = 0
-  for (const name of fs.readdirSync(dir)) {
-    if (!name.endsWith('.md')) continue
-    const m = /^order:\s*(\d+)/m.exec(fs.readFileSync(path.join(dir, name), 'utf8'))
-    if (m) max = Math.max(max, Number(m[1]))
-  }
-  return max ? max + 10 : 100
-}
-
-/** 覆盖已有笔记时沿用它的 order，别把排序打乱 */
-function currentOrder(file) {
-  if (!fs.existsSync(file)) return null
-  const m = /^order:\s*(\d+)/m.exec(fs.readFileSync(file, 'utf8'))
-  return m ? Number(m[1]) : null
-}
-
 async function importOne(spec, opts) {
   const cvId = spec.opus ? await opusToArticleId(spec.idStr, opts.cookies) : spec.id
   console.log(`\n📥 ${spec.opus ? `opus${spec.idStr} → cv${cvId}` : `cv${spec.id}`}`)
@@ -844,13 +826,13 @@ async function importOne(spec, opts) {
   /* --- 3. 组装 --- */
   const tags = [...new Set([...(data.tags ?? []).map((t) => t.name), ...opts.tags])].slice(0, 6)
   const url = `https://www.bilibili.com/read/cv${data.id}/`
-  const order = opts.dryRun ? 100 : currentOrder(noteFile) ?? nextOrder(noteDir)
 
+  // 不写 order：vault.mts 里「没写 order 的采集笔记」按 cv 号倒序，
+  // 新文章自动排到最前。要钉住位置再手动加 order。
   const frontmatter = [
     '---',
     `title: "${data.title.replace(/"/g, '\\"')}"`,
     `tags: [${tags.join(', ')}]`,
-    `order: ${order}`,
     `source: ${url}`,
     `sourceDate: ${fmtDate(data.publish_time)}`,
     `draft: ${opts.draft}`,
